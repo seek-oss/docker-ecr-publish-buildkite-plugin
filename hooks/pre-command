@@ -42,14 +42,15 @@ default_repository_name="build-cache/${BUILDKITE_ORGANIZATION_SLUG}/${BUILDKITE_
 repository_name="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME:-${default_repository_name}}"
 upsert_ecr "${repository_name}"
 docker_file="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_DOCKERFILE:-Dockerfile}"
-image_name="$(get_ecr_url ${repository_name}):$(compute_tag ${docker_file})"
+image_name="$(get_ecr_url ${repository_name})"
+image_tag="$(compute_tag ${docker_file})"
 
-if ! docker pull "${image_name}"; then
+if ! docker pull "${image_name}:${image_tag}"; then
   echo "Image not cached, building"
   if [ "$BUILDKITE_BRANCH" == "$BUILDKITE_PIPELINE_DEFAULT_BRANCH" ]; then
-    docker build . --file "${docker_file}" -t "${image_name}" -t "latest" || exit 1
+    docker build . --file "${docker_file}" -t "${image_name}:${image_tag}" -t "${image_name}:latest" || exit 1
   else
-    docker build . --file "${docker_file}" -t "${image_name}" || exit 1
+    docker build . --file "${docker_file}" -t "${image_name}:${image_tag}" || exit 1
   fi
   docker push "${image_name}"
 fi || echo "Not found"
