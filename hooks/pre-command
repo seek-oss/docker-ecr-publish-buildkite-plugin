@@ -46,7 +46,11 @@ image_name="$(get_ecr_url ${repository_name}):$(compute_tag ${docker_file})"
 
 if ! docker pull "${image_name}"; then
   echo "Image not cached, building"
-  docker build . --file "${docker_file}" -t "${image_name}" || exit 1
+  if [ "$BRANCH_NAME" == "$DEFAULT_BRANCH_NAME" ]; then
+    docker build . --file "${docker_file}" -t "${image_name}" -t "latest" || exit 1
+  else
+    docker build . --file "${docker_file}" -t "${image_name}" || exit 1
+  fi
   docker push "${image_name}"
 fi || echo "Not found"
 
