@@ -47,12 +47,12 @@ image_tag="$(compute_tag ${docker_file})"
 
 if ! docker pull "${image_name}:${image_tag}"; then
   echo "Image not cached, building"
-  docker build . --file "${docker_file}" --tag "${image_name}:${image_tag}" || exit 1
-  docker push "${image_name}:${image_tag}"
-  if [ "$BUILDKITE_BRANCH" == "$BUILDKITE_PIPELINE_DEFAULT_BRANCH" ]; then
-    docker tag "${image_name}:${image_tag}" "${image_name}:latest" || exit 1
-    docker push 
+  if [ "$BUILDKITE_BRANCH" == "buildkite-integration" ]; then
+    docker build . --file "${docker_file}" -t "${image_name}:${image_tag}" -t "${image_name}:latest" || exit 1
+  else
+    docker build . --file "${docker_file}" -t "${image_name}" || exit 1
   fi
+  docker push "${image_name}"
 fi || echo "Not found"
 
 # Support using https://github.com/buildkite-plugins/docker-buildkite-plugin without an image
