@@ -47,7 +47,7 @@ image_tag="$(compute_tag ${docker_file})"
 
 if ! docker pull "${image_name}:${image_tag}"; then
   echo "Image not cached, building"
-  if [ "$BUILDKITE_BRANCH" == "buildkite-integration" ]; then
+  if [ "$BUILDKITE_BRANCH" == "$BUILDKITE_PIPELINE_DEFAULT_BRANCH" ]; then
     docker build . --file "${docker_file}" -t "${image_name}:${image_tag}" -t "${image_name}:latest" || exit 1
   else
     docker build . --file "${docker_file}" -t "${image_name}" || exit 1
