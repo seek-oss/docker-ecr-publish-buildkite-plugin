@@ -10,21 +10,6 @@ get_ecr_url() {
     --query 'repositories[0].repositoryUri'
 }
 
-ecr_exists() {
-  local repository_name="$1"
-  aws ecr describe-repositories \
-    --repository-names "${repository_name}" \
-    --output text \
-    --query 'repositories[0].registryId'
-}
-
-upsert_ecr() {
-  local repository_name="$1"
-  if ! ecr_exists "${repository_name}"; then
-    aws ecr create-repository --repository-name "${repository_name}"
-  fi
-}
-
 compute_tag() {
   local docker_file="$1"
   local sums=($(sha1sum "${docker_file}"))
@@ -38,11 +23,8 @@ compute_tag() {
 }
 
 $(aws ecr get-login --no-include-email)
-default_repository_name="build-cache/${BUILDKITE_ORGANIZATION_SLUG}/${BUILDKITE_PIPELINE_SLUG}"
-repository_name="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME:-${default_repository_name}}"
-upsert_ecr "${repository_name}"
 docker_file="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_DOCKERFILE:-Dockerfile}"
-image_name="$(get_ecr_url ${repository_name})"
+image_name="$(get_ecr_url ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME})"
 image_tag="$(compute_tag ${docker_file})"
 
 if ! docker pull "${image_name}:${image_tag}"; then
