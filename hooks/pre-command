@@ -10,29 +10,16 @@ get_ecr_url() {
     --query 'repositories[0].repositoryUri'
 }
 
-compute_tag() {
-  local docker_file="$1"
-  local sums=($(sha1sum "${docker_file}"))
-  while IFS='=' read -r name _ ; do
-    if [[ $name =~ ^(BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_CACHE_ON_[0-9]+) ]] ; then
-      local sha=($(sha1sum "${!name}"))
-      sums="${sums}${sha:-''}"
-    fi
-  done < <(env | sort)
-  echo "${sums}" | sha1sum | cut -c-7
-}
-
 $(aws ecr get-login --no-include-email)
 docker_file="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_DOCKERFILE:-Dockerfile}"
 image_name="$(get_ecr_url ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME})"
-image_tag="$(compute_tag ${docker_file})"
 
-if ! docker pull "${image_name}:${image_tag}"; then
+if ! docker pull "${image_name}:$BUILD_VERSION"; then
   echo "Image not cached, building"
   if [ "$BUILDKITE_BRANCH" == "$BUILDKITE_PIPELINE_DEFAULT_BRANCH" ]; then
-    docker build . --file "${docker_file}" -t "${image_name}:${image_tag}" -t "${image_name}:latest" || exit 1
+    docker build . --file "${docker_file}" -t "${image_name}:$BUILD_VERSION" -t "${image_name}:latest" || exit 1
   else
-    docker build . --file "${docker_file}" -t "${image_name}" || exit 1
+    docker build . --file "${docker_file}" -t "${image_name}:branch-$BUILD_VERSION" || exit 1
   fi
   docker push "${image_name}"
 fi || echo "Not found"
