@@ -32,7 +32,7 @@ if ! docker pull "${image_name}:${image_tag}"; then
   if [ "$BUILDKITE_BRANCH" == "$BUILDKITE_PIPELINE_DEFAULT_BRANCH" ]; then
     docker build . --file "${docker_file}" -t "${image_name}:${image_tag}" -t "${image_name}:latest" || exit 1
   else
-    docker build . --file "${docker_file}" -t "${image_name}" -t "$BUILDKITE_BUILD_NUMBER" || exit 1
+    docker build . --file "${docker_file}" -t "${image_name}" -t "branch-$BUILDKITE_BUILD_NUMBER" || exit 1
   fi
   docker push "${image_name}"
 fi || echo "Not found"
