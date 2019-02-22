@@ -21,19 +21,16 @@ docker_file="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_DOCKERFILE:-Dockerfile}"
 image_name="$(get_ecr_url ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME})"
 image_tag="$(compute_tag ${docker_file})"
 
-# Create an array to include additional tags
-tags=("${image_tag}")
-allTags=("${tags[@]}" "${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ADDITIONAL_TAGS[@]}")
+if ! docker pull "${image_name}:${image_tag}"; then
+  echo "Image not cached, building"
+  docker build . --file "${docker_file}" -t "${image_name}:${image_tag}" || exit 1
+  if [ "$BUILDKITE_BRANCH" == "$BUILDKITE_PIPELINE_DEFAULT_BRANCH" ]; then
+    docker tag "${image_name}" "latest"
+    docker push "${image_name}" "latest"
+  fi
+fi || echo "Not found"
 
 for tag in ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ADDITIONAL_TAGS}
-  if ! docker pull "${image_name}:${image_tag}"; then
-    echo "Image not cached, building"
-    docker build . --file "${docker_file}" -t "${image_name}:${image_tag}" || exit 1
-    if [ "$BUILDKITE_BRANCH" == "$BUILDKITE_PIPELINE_DEFAULT_BRANCH" ]; then
-      docker tag "${image_name}" "latest"
-    fi
-  fi || echo "Not found"
-
   docker tag "${image_name}" "$tag"
   docker push "${image_name}" "$tag"
 done
