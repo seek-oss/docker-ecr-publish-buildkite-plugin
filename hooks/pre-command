@@ -13,12 +13,6 @@ get_ecr_url() {
 compute_tag() {
   local docker_file="$1"
   local sums=($(sha1sum "${docker_file}"))
-  while IFS='=' read -r name _ ; do
-    if [[ $name =~ ^(BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_CACHE_ON_[0-9]+) ]] ; then
-      local sha=($(sha1sum "${!name}"))
-      sums="${sums}${sha:-''}"
-    fi
-  done < <(env | sort)
   echo "${sums}" | sha1sum | cut -c-7
 }
 
@@ -27,17 +21,22 @@ docker_file="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_DOCKERFILE:-Dockerfile}"
 image_name="$(get_ecr_url ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME})"
 image_tag="$(compute_tag ${docker_file})"
 
-if ! docker pull "${image_name}:${image_tag}"; then
-  echo "Image not cached, building"
-  if [ "$BUILDKITE_BRANCH" == "$BUILDKITE_PIPELINE_DEFAULT_BRANCH" ]; then
-    docker build . --file "${docker_file}" -t "${image_name}:${image_tag}" -t "${image_name}:latest" || exit 1
-  else
+# Create an array to include additional tags
+tags=("${image_tag}")
+allTags=("${tags[@]}" "${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ADDITIONAL_TAGS[@]}")
+
+for tag in ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ADDITIONAL_TAGS}
+  if ! docker pull "${image_name}:${image_tag}"; then
+    echo "Image not cached, building"
     docker build . --file "${docker_file}" -t "${image_name}:${image_tag}" || exit 1
-  fi
-fi || echo "Not found"
-  
-docker tag "${image_name}" "branch-$BUILDKITE_BUILD_NUMBER"
-docker push "${image_name}"
+    if [ "$BUILDKITE_BRANCH" == "$BUILDKITE_PIPELINE_DEFAULT_BRANCH" ]; then
+      docker tag "${image_name}" "latest"
+    fi
+  fi || echo "Not found"
+
+  docker tag "${image_name}" "$tag"
+  docker push "${image_name}" "$tag"
+done
 
 # Support using https://github.com/buildkite-plugins/docker-buildkite-plugin without an image
 export BUILDKITE_PLUGIN_DOCKER_IMAGE="${image_name}"
