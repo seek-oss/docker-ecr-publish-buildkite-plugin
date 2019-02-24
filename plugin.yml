@@ -7,8 +7,8 @@ configuration:
   properties:
     dockerfile:
       type: string
-    cache-on:
-      type: array
     ecr-name:
       type: string
+    additional-tags:
+      type: array
   required: []
