@@ -2,12 +2,6 @@
 
 set -euo pipefail
 
-compute_tag() {
-  local docker_file="$1"
-  local sums=($(sha1sum "${docker_file}"))
-  echo "${sums}" | sha1sum | cut -c-7
-}
-
 get_ecr_url() {
   local repository_name="$1"
   aws ecr describe-repositories \
@@ -38,11 +32,11 @@ plugin_read_list_into_result() {
 
 push_additional_tags() {
   local tags_parameter="$1"
-  local current_image="$2"
+  local branch_type="$2"
   
   if plugin_read_list_into_result ${tags_parameter} ; then
     for tag in "${result[@]}" ; do
-      docker tag ${current_image} "${image_name}:$tag"
+      docker tag "${branch_type}" "${image_name}:$tag"
       docker push "${image_name}:$tag"
     done
   fi
@@ -51,18 +45,13 @@ push_additional_tags() {
 $(aws ecr get-login --no-include-email)
 docker_file="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_DOCKERFILE:-Dockerfile}"
 image_name="$(get_ecr_url ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME})"
-image_tag="$(compute_tag ${docker_file})" 
-
-if ! docker pull "${image_name}:${image_tag}"; then
-  echo "Image not cached, building"
-  docker build . --file "${docker_file}" -t "${image_name}:${image_tag}"|| exit 1
-fi || echo "Not found"
 
 if [ "$BUILDKITE_BRANCH" == "$BUILDKITE_PIPELINE_DEFAULT_BRANCH" ]; then
-  push_additional_tags BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_DEFAULT_TAGS "${image_name}"
+  docker build . --file "${docker_file}" --build-arg "BRANCH_TYPE=master" -t "master" || exit 1
+  docker tag "master" "${image_name}:latest"
+  push_additional_tags BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_DEFAULT_TAGS "master"
   docker push "${image_name}:latest"
 else
-  push_additional_tags BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_BRANCH_TAGS "${image_name}:${image_tag}"
+  docker build . --file "${docker_file}" -t "branch" || exit 1
+  push_additional_tags BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_BRANCH_TAGS "branch"
 fi
-
-docker push "${image_name}:${image_tag}"
