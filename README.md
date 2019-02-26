@@ -21,6 +21,9 @@ steps:
       seek-oss/docker-ecr-publish#v1.0.2:
         dockerfile: Dockerfile
         ecr-name: insert-ecr-name
+        args:
+          - BUILD_NUMBER=1
+          - BRANCH=branch-a
         default-tags:
           - master-1.1.0
         branch-tags:

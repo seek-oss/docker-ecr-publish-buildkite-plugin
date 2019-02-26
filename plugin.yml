@@ -9,6 +9,8 @@ configuration:
       type: string
     ecr-name:
       type: string
+    args:
+      type: [ string, array ]
     additional-tags:
       type: array
   required: []
