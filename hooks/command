@@ -3,68 +3,82 @@
 set -euo pipefail
 
 get_ecr_url() {
-  local repository_name="$1"
+  local repository_name="${1}"
+
   aws ecr describe-repositories \
     --repository-names "${repository_name}" \
     --output text \
     --query 'repositories[0].repositoryUri'
 }
 
-plugin_read_list_into_result() {
-  local prefix="$1"
-  local parameter="${prefix}_0"
+read_build_args() {
+  build_args=()
+
+  if read_list_property 'ARGS'; then
+    for arg in "${result[@]}"; do
+      build_args+=('--build-arg' "${arg}")
+    done
+  fi
+}
+
+# read a plugin property of type [array, string] into a Bash array. Buildkite
+# exposes a string value at BUILDKITE_PLUGIN_PLUGIN_NAME_PROP_NAME, and array
+# values at BUILDKITE_PLUGIN_PLUGIN_NAME_PROP_NAME_0,
+# BUILDKITE_PLUGIN_PLUGIN_NAME_PROP_NAME_1, etc.
+read_list_property() {
+  local prefix="BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_${1}"
+  local property="${prefix}_0"
+
   result=()
 
-  if [[ -n "${!parameter:-}" ]]; then
+  if [[ -n ${!property:-} ]]; then
     local i=0
-    local parameter="${prefix}_${i}"
-    while [[ -n "${!parameter:-}" ]]; do
-      echo "${!parameter}"
-      result+=("${!parameter}")
+    local property="${prefix}_${i}"
+
+    while [[ -n ${!property:-} ]]; do
+      result+=("${!property}")
+
       i=$((i+1))
-      parameter="${prefix}_${i}"
+      property="${prefix}_${i}"
     done
-  elif [[ -n "${!prefix:-}" ]]; then
+  elif [[ -n ${!prefix:-} ]]; then
     result+=("${!prefix}")
   fi
 
   [[ ${#result[@]} -gt 0 ]] || return 1
 }
 
-plugin_read_list() {
-  plugin_read_list_into_result "BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_$1"
-}
+push_tags() {
+  local tags="${1}"
 
-push_additional_tags() {
-  local tags_parameter="$1"
-  local branch_type="$2"
-  
-  if plugin_read_list_into_result ${tags_parameter} ; then
-    for tag in "${result[@]}" ; do
-      docker tag "${branch_type}" "${image_name}:$tag"
-      docker push "${image_name}:$tag"
-    done
-  fi
+  for tag in "${tags[@]}"; do
+    echo "pushing tag '${tag}'"
+    docker tag "${image}" "${image}:${tag}"
+    docker push "${image}:${tag}"
+  done
 }
 
 $(aws ecr get-login --no-include-email)
-docker_file="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_DOCKERFILE:-Dockerfile}"
-image_name="$(get_ecr_url ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME})"
 
-build_args=()
+dockerfile="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_DOCKERFILE:-Dockerfile}"
 
-# read all arguments
-while read -r arg ; do
-  [[ -n "${arg:-}" ]] && build_args+=("--build-arg" "${arg}")
-done <<< "$(plugin_read_list ARGS)"
+image="$(get_ecr_url "${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME}")"
 
-if [ "$BUILDKITE_BRANCH" == "$BUILDKITE_PIPELINE_DEFAULT_BRANCH" ]; then
-  build_args+=("--build-arg" "BRANCH_TYPE=master")
-  docker build . --file "${docker_file}" "${build_args[@]}" -t "master" || exit 1
-  docker tag "master" "${image_name}:latest"
-  push_additional_tags BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_DEFAULT_TAGS "master"
-  docker push "${image_name}:latest"
+read_build_args
+
+if [[ ${BUILDKITE_BRANCH} == "${BUILDKITE_PIPELINE_DEFAULT_BRANCH}" ]]; then
+  build_args+=('--build-arg' 'BRANCH_TYPE=master')
+  tags=('latest' 'master')
+  if read_list_property 'DEFAULT_TAGS'; then
+    tags+=("${result[@]}")
+  fi
 else
-  docker build . --file "${docker_file}" "${build_args[@]}" -t "branch" || exit 1
-  push_additional_tags BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_BRANCH_TAGS "branch"
+  tags=('branch')
+  if read_list_property 'BRANCH_TAGS'; then
+    tags+=("${result[@]}")
+  fi
 fi
+
+docker build --file "${dockerfile}" --tag "${image}" "${build_args[@]}" .
+
+push_tags "${tags[@]}"

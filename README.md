@@ -1,35 +1,76 @@
 # Docker ECR Publish
 
-A [Buildkite plugin](https://buildkite.com/docs/agent/v3/plugins) to build, tag, cache and push entire docker images to ECR.
+A [Buildkite plugin](https://buildkite.com/docs/agent/v3/plugins) to build, tag
+and push Docker images to Amazon ECR.
 
-Allows for additional tags if required for master(default-tags) and branch(branch-tags) builds
+## Example
 
-# Example
+The following pipeline builds the default `./Dockerfile` and pushes it to a
+pre-existing ECR repository `my-repo`:
 
-## Basic Usage
-
-Dockerfile
-```
-FROM bash
-RUN echo "my expensive build step"
-```
-
-```yml
+```yaml
 steps:
-  - command: 'echo anything'
-    plugins:
-      seek-oss/docker-ecr-publish#v1.0.2:
-        dockerfile: Dockerfile
-        ecr-name: insert-ecr-name
-        args:
-          - BUILD_NUMBER=1
-          - BRANCH=branch-a
-        default-tags:
-          - master-1.1.0
-        branch-tags:
-          - branch-1.1.0
+  - plugins:
+      - seek-oss/docker-ecr-publish#v1.1.4:
+          ecr-name: my-repo
 ```
 
-# License
+An alternate Dockerfile may be specified:
+
+```yaml
+steps:
+  - plugins:
+      - seek-oss/docker-ecr-publish#v1.1.4:
+          dockerfile: path/to/final.Dockerfile
+          ecr-name: my-repo
+```
+
+[Build-time
+variables](https://docs.docker.com/engine/reference/commandline/build/#set-build-time-variables---build-arg)
+are supported, either with an explicit value, or without one to propagate an
+environment variable from the pipeline step:
+
+```yaml
+steps:
+  - plugins:
+      - seek-oss/docker-ecr-publish#v1.1.4:
+          args:
+            - BUILDKITE_BUILD_NUMBER # propagate environment variable
+            - ENVIRONMENT=prod # explicit value
+          ecr-name: my-repo
+```
+
+Images triggered from the default branch are tagged with `latest` and `master`,
+while images triggered from any other branch are tagged with `branch`.
+Additional tags may be listed:
+
+```yaml
+steps:
+  - plugins:
+      - seek-oss/docker-ecr-publish#v1.1.4:
+          branch-tags:
+            # - branch
+            - $BUILDKITE_BUILD_NUMBER
+          default-tags:
+            # - latest
+            # - master
+            - production
+          ecr-name: my-repo
+```
+
+This plugin can be used in combination with the [Create
+ECR](https://github.com/seek-oss/create-ecr-buildkite-plugin) plugin to fully
+manage an ECR application repository within one pipeline step:
+
+```yaml
+steps:
+  - plugins:
+      - seek-oss/create-ecr#v1.1.1:
+          name: my-repo
+      - seek-oss/docker-ecr-publish#v1.1.4:
+          ecr-name: my-repo
+```
+
+## License
 
 MIT (see [LICENSE](LICENSE))
