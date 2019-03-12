@@ -51,10 +51,8 @@ read_list_property() {
 push_tags() {
   local tags="${1}"
 
-  $(aws ecr get-login --no-include-email)
-
   for tag in "${tags[@]}"; do
-    echo "pushing tag '${tag}'"
+    echo "Tag: '${tag}'"
     docker tag "${image}" "${image}:${tag}"
     docker push "${image}:${tag}"
   done
@@ -84,6 +82,11 @@ else
   fi
 fi
 
+echo '--- Building Docker image'
 docker build --file "${dockerfile}" --tag "${image}" "${build_args[@]}" .
 
+echo '--- Logging in to ECR'
+$(aws ecr get-login --no-include-email)
+
+echo '--- Pushing Docker image'
 push_tags "${tags[@]}"
