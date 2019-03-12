@@ -86,7 +86,8 @@ echo "Build args: ${build_args[*]}"
 docker build --file "${dockerfile}" --tag "${image}" "${build_args[@]}" .
 
 echo '--- Logging in to ECR'
-$(aws ecr get-login --no-include-email)
+readonly login="$(aws ecr get-login --no-include-email)"
+login
 
 echo '--- Pushing Docker image'
 push_tags "${tags[@]}"
