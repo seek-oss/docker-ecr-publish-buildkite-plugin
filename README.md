@@ -42,20 +42,18 @@ steps:
           ecr-name: my-repo
 ```
 
-Images triggered from the default branch are tagged with `latest` and `master`,
-while images triggered from any other branch are tagged with `branch`.
-Additional tags may be listed:
+Images built from the default branch are tagged with `latest`. Additional tags
+may be listed, and are split between non-default branches and the default
+branch:
 
 ```yaml
 steps:
   - plugins:
       - seek-oss/docker-ecr-publish#v1.1.4:
           branch-tags:
-            # - branch
             - $BUILDKITE_BUILD_NUMBER
           default-tags:
             # - latest
-            # - master
             - production
           ecr-name: my-repo
 ```
@@ -83,9 +81,13 @@ steps:
 
   Tags to push on a non-default branch build.
 
+  Default: none (image is not pushed)
+
 - `default-tags` (optional, array)
 
   Tags to push on a default branch build.
+
+  Default: `latest` (this cannot be disabled)
 
 - `dockerfile` (optional, string)
 

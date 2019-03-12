@@ -70,12 +70,12 @@ read_build_args
 
 if [[ ${BUILDKITE_BRANCH} == "${BUILDKITE_PIPELINE_DEFAULT_BRANCH}" ]]; then
   build_args+=('--build-arg' 'BRANCH_TYPE=master')
-  tags=('latest' 'master')
+  tags=('latest')
   if read_list_property 'DEFAULT_TAGS'; then
     tags+=("${result[@]}")
   fi
 else
-  tags=('branch')
+  tags=()
   if read_list_property 'BRANCH_TAGS'; then
     tags+=("${result[@]}")
   fi
