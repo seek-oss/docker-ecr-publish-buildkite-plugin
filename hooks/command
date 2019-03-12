@@ -21,6 +21,19 @@ read_build_args() {
   fi
 }
 
+read_caches_from() {
+  caches_from=()
+
+  if read_list_property 'CACHE_FROM'; then
+    for cache in "${result[@]}"; do
+      if [[ ${cache} == ecr://* ]]; then
+        cache="$(get_ecr_url "${cache:6}")"
+      fi
+      caches_from+=('--cache-from' "${cache}")
+    done
+  fi
+}
+
 # read a plugin property of type [array, string] into a Bash array. Buildkite
 # exposes a string value at BUILDKITE_PLUGIN_{NAME}_{KEY}, and array values at
 # BUILDKITE_PLUGIN_{NAME}_{KEY}_{IDX}.
@@ -68,6 +81,8 @@ image="$(get_ecr_url "${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME}")"
 
 read_build_args
 
+read_caches_from
+
 if [[ ${BUILDKITE_BRANCH} == "${BUILDKITE_PIPELINE_DEFAULT_BRANCH}" ]]; then
   build_args+=('--build-arg' 'BRANCH_TYPE=master')
   tags=('latest')
@@ -83,7 +98,9 @@ fi
 
 echo '--- Building Docker image'
 echo "Build args: ${build_args[*]}"
-docker build --file "${dockerfile}" --tag "${image}" "${build_args[@]}" .
+echo "Cache from: ${caches_from[*]}"
+echo "Dockerfile: ${dockerfile}"
+docker build --file "${dockerfile}" --tag "${image}" "${build_args[@]}" "${caches_from[@]}" .
 
 echo '--- Logging in to ECR'
 readonly login="$(aws ecr get-login --no-include-email)"
