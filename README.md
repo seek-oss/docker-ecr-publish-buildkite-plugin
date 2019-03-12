@@ -73,7 +73,7 @@ steps:
 
 ## Configuration
 
-- `args` (required, array|string):
+- `args` (optional, array|string):
 
   build-args to pass into docker build.
 
