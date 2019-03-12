@@ -22,9 +22,8 @@ read_build_args() {
 }
 
 # read a plugin property of type [array, string] into a Bash array. Buildkite
-# exposes a string value at BUILDKITE_PLUGIN_PLUGIN_NAME_PROP_NAME, and array
-# values at BUILDKITE_PLUGIN_PLUGIN_NAME_PROP_NAME_0,
-# BUILDKITE_PLUGIN_PLUGIN_NAME_PROP_NAME_1, etc.
+# exposes a string value at BUILDKITE_PLUGIN_{NAME}_{KEY}, and array values at
+# BUILDKITE_PLUGIN_{NAME}_{KEY}_{IDX}.
 read_list_property() {
   local prefix="BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_${1}"
   local property="${prefix}_0"
@@ -83,6 +82,7 @@ else
 fi
 
 echo '--- Building Docker image'
+echo "Build args: ${build_args[*]}"
 docker build --file "${dockerfile}" --tag "${image}" "${build_args[@]}" .
 
 echo '--- Logging in to ECR'
