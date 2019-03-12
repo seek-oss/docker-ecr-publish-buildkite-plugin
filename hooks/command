@@ -51,6 +51,8 @@ read_list_property() {
 push_tags() {
   local tags="${1}"
 
+  $(aws ecr get-login --no-include-email)
+
   for tag in "${tags[@]}"; do
     echo "pushing tag '${tag}'"
     docker tag "${image}" "${image}:${tag}"
@@ -58,11 +60,14 @@ push_tags() {
   done
 }
 
-$(aws ecr get-login --no-include-email)
-
 dockerfile="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_DOCKERFILE:-Dockerfile}"
 
-image="$(get_ecr_url "${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME}")"
+if [[ -z ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME:-} ]]; then
+  echo "'ecr-name' property is required"
+  exit 1
+fi
+
+image="$(get_ecr_url "${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME:-}")"
 
 read_build_args
 

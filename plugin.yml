@@ -1,5 +1,5 @@
 name: Docker ECR Publish
-description: Plugin for building, tagging, caching and publishing images to AWS ECR
+description: Build, tag, and push Docker images to Amazon ECR
 author: https://github.com/seek-oss
 requirements:
   - docker
@@ -15,4 +15,4 @@ configuration:
       type: string
     ecr-name:
       type: string
-  required: []
+  required: ['ecr-name']

@@ -1,6 +1,8 @@
-# Docker ECR Publish
+# Docker ECR Publish Buildkite Plugin
 
-A [Buildkite plugin](https://buildkite.com/docs/agent/v3/plugins) to build, tag
+[![Build Status](https://img.shields.io/github/release/seek-oss/docker-ecr-publish-buildkite-plugin.svg)](https://github.com/seek-oss/docker-ecr-publish-buildkite-plugin/releases)
+
+A [Buildkite plugin](https://buildkite.com/docs/agent/v3/plugins) to build, tag,
 and push Docker images to Amazon ECR.
 
 ## Example
@@ -65,11 +67,35 @@ manage an ECR application repository within one pipeline step:
 ```yaml
 steps:
   - plugins:
-      - seek-oss/create-ecr#v1.1.1:
+      - seek-oss/create-ecr#v1.1.2:
           name: my-repo
       - seek-oss/docker-ecr-publish#v1.1.4:
           ecr-name: my-repo
 ```
+
+## Configuration
+
+- `args` (required, array|string):
+
+  build-args to pass into docker build.
+
+- `branch-tags` (optional, array)
+
+  Tags to push on a non-default branch build.
+
+- `default-tags` (optional, array)
+
+  Tags to push on a default branch build.
+
+- `dockerfile` (optional, string)
+
+  Local path to a custom Dockerfile.
+
+  Default: `Dockerfile`
+
+- `ecr-name` (required, string)
+
+  Name of the ECR repository.
 
 ## License
 
