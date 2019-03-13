@@ -1,6 +1,6 @@
 # Docker ECR Publish Buildkite Plugin
 
-[![Build Status](https://img.shields.io/github/release/seek-oss/docker-ecr-publish-buildkite-plugin.svg)](https://github.com/seek-oss/docker-ecr-publish-buildkite-plugin/releases)
+[![GitHub Release](https://img.shields.io/github/release/seek-oss/docker-ecr-publish-buildkite-plugin.svg)](https://github.com/seek-oss/docker-ecr-publish-buildkite-plugin/releases)
 
 A [Buildkite plugin](https://buildkite.com/docs/agent/v3/plugins) to build, tag,
 and push Docker images to Amazon ECR.
@@ -76,6 +76,10 @@ steps:
 - `args` (optional, array|string):
 
   build-args to pass into docker build.
+
+  Sensitive arguments should be propagated as an environment variable (`MY_ARG`
+  instead of `MY_ARG=blah`), so that they are not checked into your source
+  control and then logged to Buildkite output by this plugin.
 
 - `branch-tags` (optional, array)
 
