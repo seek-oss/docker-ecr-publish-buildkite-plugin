@@ -70,7 +70,7 @@ read_list_property() {
 }
 
 push_tags() {
-  local tags=("${1}")
+  local tags=("${@}")
 
   for tag in "${tags[@]}"; do
     echo "Tag: '${tag}'"
