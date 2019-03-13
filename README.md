@@ -13,7 +13,7 @@ pre-existing ECR repository `my-repo`:
 ```yaml
 steps:
   - plugins:
-      - seek-oss/docker-ecr-publish#v1.1.5:
+      - seek-oss/docker-ecr-publish#v1.1.6:
           ecr-name: my-repo
 ```
 
@@ -22,7 +22,7 @@ An alternate Dockerfile may be specified:
 ```yaml
 steps:
   - plugins:
-      - seek-oss/docker-ecr-publish#v1.1.5:
+      - seek-oss/docker-ecr-publish#v1.1.6:
           dockerfile: path/to/final.Dockerfile
           ecr-name: my-repo
 ```
@@ -35,27 +35,58 @@ environment variable from the pipeline step:
 ```yaml
 steps:
   - plugins:
-      - seek-oss/docker-ecr-publish#v1.1.5:
+      - seek-oss/docker-ecr-publish#v1.1.6:
           args:
             - BUILDKITE_BUILD_NUMBER # propagate environment variable
-            - ENVIRONMENT=prod # explicit value
+          branch-args:
+            - BRANCH_TYPE=branch # explicit value
+          default-args:
+            - BRANCH_TYPE=default # explicit value
           ecr-name: my-repo
 ```
 
-Images built from the default branch are tagged with `latest`. Additional tags
-may be listed, and are split between non-default branches and the default
-branch:
+All images are tagged with their corresponding `$BUILDKITE_BUILD_NUMBER`, and
+images built from the default branch are tagged with `latest`. Additional tags
+may be listed:
 
 ```yaml
 steps:
   - plugins:
-      - seek-oss/docker-ecr-publish#v1.1.5:
+      - seek-oss/docker-ecr-publish#v1.1.6:
           branch-tags:
-            - $BUILDKITE_BUILD_NUMBER
+            - branch-$BUILDKITE_BUILD_NUMBER
           default-tags:
             # - latest
-            - production
+            - default-$BUILDKITE_BUILD_NUMBER
           ecr-name: my-repo
+          tags:
+            # - $BUILDKITE_BUILD_NUMBER
+            - any-$BUILDKITE_BUILD_NUMBER
+```
+
+More complex branch workflows can be achieved by using multiple pipeline steps
+with differing `branches`:
+
+```yaml
+steps:
+  - branches: '!dev !prod'
+    plugins:
+      - seek-oss/docker-ecr-publish#v1.1.6:
+          args: BRANCH_TYPE=branch
+          ecr-name: my-repo
+          tags: branch-$BUILDKITE_BUILD_NUMBER
+  - branches: dev
+    plugins:
+      - seek-oss/docker-ecr-publish#v1.1.6:
+          args: BRANCH_TYPE=dev
+          ecr-name: my-repo
+          tags: dev-$BUILDKITE_BUILD_NUMBER
+  - branches: prod
+    plugins:
+      - seek-oss/docker-ecr-publish#v1.1.6:
+          args: BRANCH_TYPE=prod
+          ecr-name: my-repo
+          tags: prod-$BUILDKITE_BUILD_NUMBER
 ```
 
 This plugin can be used in combination with the [Create
@@ -67,7 +98,7 @@ steps:
   - plugins:
       - seek-oss/create-ecr#v1.1.2:
           name: my-repo
-      - seek-oss/docker-ecr-publish#v1.1.5:
+      - seek-oss/docker-ecr-publish#v1.1.6:
           ecr-name: my-repo
 ```
 
@@ -79,48 +110,58 @@ reuse a base image across pipeline steps:
 steps:
   - command: npm test
     plugins:
-      - seek-oss/docker-ecr-cache#v1.1.1:
+      - seek-oss/docker-ecr-cache#v1.1.2:
+          ecr-name: my-cache
           target: deps
       - docker#v3.0.1:
           volumes:
             - /workdir/node_modules
   - plugins:
-      - seek-oss/docker-ecr-cache#v1.1.1:
+      - seek-oss/docker-ecr-cache#v1.1.2:
+          ecr-name: my-cache
           target: deps
-      - seek-oss/docker-ecr-publish#v1.1.5:
-          cache-from: ecr://build-cache/my-org/my-repo
-          name: my-repo
+      - seek-oss/docker-ecr-publish#v1.1.6:
+          cache-from: ecr://my-cache # defaults to latest tag
+          ecr-name: my-repo
 ```
 
 ## Configuration
 
-- `args` (optional, array|string):
+- `args` (optional, array|string)
 
-  build-args to pass into docker build.
+  Build args to provide to all builds. These are listed _before_ the
+  branch-specific `branch-args` and `default-args` properties in the resulting
+  `docker build` command.
 
   Sensitive arguments should be propagated as an environment variable (`MY_ARG`
   instead of `MY_ARG=blah`), so that they are not checked into your source
   control and then logged to Buildkite output by this plugin.
 
-- `branch-tags` (optional, array)
+- `branch-args` (optional, array|string)
 
-  Tags to push on a non-default branch build.
+  Build args to provide to non-default branch builds.
 
-  Default: none (image is not pushed)
+- `branch-tags` (optional, array|string)
 
-- `cache-from` (optional, array|string):
+  Tags to push on non-default branch builds.
+
+- `cache-from` (optional, array|string)
 
   Images for Docker to use as cache sources, e.g. a base or dependency image.
 
   Use standard Docker image notation (e.g. `debian:jessie`,
-  `myregistry.local:5000/testing/test-image`), or the `ecr://my-repo` shorthand
+  `myregistry.local:5000/testing/test-image`), or the `ecr://cache-repo:tag` shorthand
   to point to an ECR repository in the current AWS account.
 
-- `default-tags` (optional, array)
+- `default-args` (optional, array|string)
 
-  Tags to push on a default branch build.
+  Build args to provide to default branch builds.
 
-  Default: `latest` (this cannot be disabled)
+- `default-tags` (optional, array|string)
+
+  Tags to push on default branch builds.
+
+  Default: `latest` (non-removable)
 
 - `dockerfile` (optional, string)
 
@@ -131,6 +172,12 @@ steps:
 - `ecr-name` (required, string)
 
   Name of the ECR repository.
+
+- `tags` (optional, array|string)
+
+  Tags to push on all builds.
+
+  Default: `$BUILDKITE_BUILD_NUMBER` (non-removable)
 
 ## License
 
