@@ -64,6 +64,31 @@ steps:
             - any-$BUILDKITE_BUILD_NUMBER
 ```
 
+More complex branch workflows can be achieved by using multiple pipeline steps
+with differing `branches`:
+
+```yaml
+steps:
+  - branches: '!dev !prod'
+    plugins:
+      - seek-oss/docker-ecr-publish#v1.1.6:
+          args: BRANCH_TYPE=branch
+          ecr-name: my-repo
+          tags: branch-$BUILDKITE_BUILD_NUMBER
+  - branches: dev
+    plugins:
+      - seek-oss/docker-ecr-publish#v1.1.6:
+          args: BRANCH_TYPE=dev
+          ecr-name: my-repo
+          tags: dev-$BUILDKITE_BUILD_NUMBER
+  - branches: prod
+    plugins:
+      - seek-oss/docker-ecr-publish#v1.1.6:
+          args: BRANCH_TYPE=prod
+          ecr-name: my-repo
+          tags: prod-$BUILDKITE_BUILD_NUMBER
+```
+
 This plugin can be used in combination with the [Create
 ECR](https://github.com/seek-oss/create-ecr-buildkite-plugin) plugin to fully
 manage an ECR application repository within one pipeline step:
