@@ -91,6 +91,11 @@ push_tags() {
   done
 }
 
+echo '--- Logging in to ECR'
+$(aws ecr get-login --no-include-email)
+
+echo '--- Reading plugin parameters'
+
 dockerfile="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_DOCKERFILE:-Dockerfile}"
 
 if [[ -z ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME:-} ]]; then
@@ -104,8 +109,6 @@ build_args=()
 caches_from=()
 tags=("${BUILDKITE_BUILD_NUMBER}")
 
-echo '--- Reading plugin parameters'
-
 read_build_args 'ARGS'
 read_caches_from
 read_tags 'TAGS'
@@ -118,9 +121,6 @@ else
   read_build_args 'BRANCH_ARGS'
   read_tags 'BRANCH_TAGS'
 fi
-
-echo '--- Logging in to ECR'
-$(aws ecr get-login --no-include-email)
 
 echo '--- Building Docker image'
 echo "Build args: ${build_args[*]}"
