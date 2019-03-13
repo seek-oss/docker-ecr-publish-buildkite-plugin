@@ -110,16 +110,18 @@ reuse a base image across pipeline steps:
 steps:
   - command: npm test
     plugins:
-      - seek-oss/docker-ecr-cache#v1.1.1:
+      - seek-oss/docker-ecr-cache#v1.1.2:
+          ecr-name: my-cache
           target: deps
       - docker#v3.0.1:
           volumes:
             - /workdir/node_modules
   - plugins:
-      - seek-oss/docker-ecr-cache#v1.1.1:
+      - seek-oss/docker-ecr-cache#v1.1.2:
+          ecr-name: my-cache
           target: deps
       - seek-oss/docker-ecr-publish#v1.1.6:
-          cache-from: ecr://build-cache/my-org/my-repo
+          cache-from: ecr://my-cache # defaults to latest tag
           ecr-name: my-repo
 ```
 
@@ -148,7 +150,7 @@ steps:
   Images for Docker to use as cache sources, e.g. a base or dependency image.
 
   Use standard Docker image notation (e.g. `debian:jessie`,
-  `myregistry.local:5000/testing/test-image`), or the `ecr://my-repo` shorthand
+  `myregistry.local:5000/testing/test-image`), or the `ecr://cache-repo:tag` shorthand
   to point to an ECR repository in the current AWS account.
 
 - `default-args` (optional, array|string)
