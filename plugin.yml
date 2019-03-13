@@ -7,14 +7,20 @@ configuration:
   properties:
     args:
       type: [array, string]
+    branch-args:
+      type: [array, string]
     branch-tags:
-      type: array
+      type: [array, string]
     cache-from:
       type: [array, string]
+    default-args:
+      type: [array, string]
     default-tags:
-      type: array
+      type: [array, string]
     dockerfile:
       type: string
     ecr-name:
       type: string
+    tags:
+      type: [array, string]
   required: ['ecr-name']

@@ -12,9 +12,9 @@ get_ecr_url() {
 }
 
 read_build_args() {
-  build_args=()
+  local property="${1}"
 
-  if read_list_property 'ARGS'; then
+  if read_list_property "${property}"; then
     for arg in "${result[@]}"; do
       build_args+=('--build-arg' "${arg}")
     done
@@ -22,15 +22,22 @@ read_build_args() {
 }
 
 read_caches_from() {
-  caches_from=()
-
   if read_list_property 'CACHE_FROM'; then
     for cache in "${result[@]}"; do
       if [[ ${cache} == ecr://* ]]; then
         cache="$(get_ecr_url "${cache:6}")"
       fi
+
       caches_from+=('--cache-from' "${cache}")
     done
+  fi
+}
+
+read_tags() {
+  local property="${1}"
+
+  if read_list_property "${property}"; then
+    tags+=("${result[@]}")
   fi
 }
 
@@ -61,7 +68,7 @@ read_list_property() {
 }
 
 push_tags() {
-  local tags="${1}"
+  local tags=("${1}")
 
   for tag in "${tags[@]}"; do
     echo "Tag: '${tag}'"
@@ -79,21 +86,21 @@ fi
 
 image="$(get_ecr_url "${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME}")"
 
-read_build_args
+build_args=()
+caches_from=()
+tags=("${BUILDKITE_BUILD_NUMBER}")
 
+read_build_args 'ARGS'
 read_caches_from
+read_tags 'TAGS'
 
 if [[ ${BUILDKITE_BRANCH} == "${BUILDKITE_PIPELINE_DEFAULT_BRANCH}" ]]; then
-  build_args+=('--build-arg' 'BRANCH_TYPE=master')
-  tags=('latest')
-  if read_list_property 'DEFAULT_TAGS'; then
-    tags+=("${result[@]}")
-  fi
+  read_build_args 'DEFAULT_ARGS'
+  read_tags 'DEFAULT_TAGS'
+  tags+=('latest')
 else
-  tags=()
-  if read_list_property 'BRANCH_TAGS'; then
-    tags+=("${result[@]}")
-  fi
+  read_build_args 'BRANCH_ARGS'
+  read_tags 'BRANCH_TAGS'
 fi
 
 echo '--- Building Docker image'
