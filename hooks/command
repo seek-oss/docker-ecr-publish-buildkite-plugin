@@ -103,14 +103,14 @@ else
   read_tags 'BRANCH_TAGS'
 fi
 
+echo '--- Logging in to ECR'
+$(aws ecr get-login --no-include-email)
+
 echo '--- Building Docker image'
 echo "Build args: ${build_args[*]}"
 echo "Cache from: ${caches_from[*]}"
 echo "Dockerfile: ${dockerfile}"
 docker build --file "${dockerfile}" --tag "${image}" "${build_args[@]}" "${caches_from[@]}" .
-
-echo '--- Logging in to ECR'
-$(aws ecr get-login --no-include-email)
 
 echo '--- Pushing Docker image'
 push_tags "${tags[@]}"
