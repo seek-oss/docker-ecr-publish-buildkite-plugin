@@ -25,7 +25,19 @@ read_caches_from() {
   if read_list_property 'CACHE_FROM'; then
     for cache in "${result[@]}"; do
       if [[ ${cache} == ecr://* ]]; then
-        cache="$(get_ecr_url "${cache:6}")"
+        local image
+        local tag
+
+        image="${cache:6}"
+        tag="${image##*:}"
+
+        if [[ ${image} == "${tag}" ]]; then
+          tag='latest'
+        else
+          image="${image%:*}"
+        fi
+
+        cache="$(get_ecr_url "${image}"):${tag}"
       fi
 
       docker pull "${cache}" || true
