@@ -173,9 +173,7 @@ steps:
 
 - `tags` (optional, array|string)
 
-  Tags to push on all builds. These are listed _before_ the branch-specific
-  `branch-tags` and `default-tags` properties in the resulting `docker build`
-  command.
+  Tags to push on all builds.
 
   Default: `$BUILDKITE_BUILD_NUMBER` (non-removable)
 
