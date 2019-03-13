@@ -13,7 +13,7 @@ pre-existing ECR repository `my-repo`:
 ```yaml
 steps:
   - plugins:
-      - seek-oss/docker-ecr-publish#v1.1.4:
+      - seek-oss/docker-ecr-publish#v1.1.5:
           ecr-name: my-repo
 ```
 
@@ -22,7 +22,7 @@ An alternate Dockerfile may be specified:
 ```yaml
 steps:
   - plugins:
-      - seek-oss/docker-ecr-publish#v1.1.4:
+      - seek-oss/docker-ecr-publish#v1.1.5:
           dockerfile: path/to/final.Dockerfile
           ecr-name: my-repo
 ```
@@ -35,7 +35,7 @@ environment variable from the pipeline step:
 ```yaml
 steps:
   - plugins:
-      - seek-oss/docker-ecr-publish#v1.1.4:
+      - seek-oss/docker-ecr-publish#v1.1.5:
           args:
             - BUILDKITE_BUILD_NUMBER # propagate environment variable
             - ENVIRONMENT=prod # explicit value
@@ -49,7 +49,7 @@ branch:
 ```yaml
 steps:
   - plugins:
-      - seek-oss/docker-ecr-publish#v1.1.4:
+      - seek-oss/docker-ecr-publish#v1.1.5:
           branch-tags:
             - $BUILDKITE_BUILD_NUMBER
           default-tags:
@@ -67,7 +67,7 @@ steps:
   - plugins:
       - seek-oss/create-ecr#v1.1.2:
           name: my-repo
-      - seek-oss/docker-ecr-publish#v1.1.4:
+      - seek-oss/docker-ecr-publish#v1.1.5:
           ecr-name: my-repo
 ```
 
@@ -87,7 +87,7 @@ steps:
   - plugins:
       - seek-oss/docker-ecr-cache#v1.1.1:
           target: deps
-      - seek-oss/docker-ecr-publish#v2.0.0:
+      - seek-oss/docker-ecr-publish#v1.1.5:
           cache-from: ecr://build-cache/my-org/my-repo
           name: my-repo
 ```
