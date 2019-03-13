@@ -131,9 +131,9 @@ steps:
   branch-specific `branch-args` and `default-args` properties in the resulting
   `docker build` command.
 
-Sensitive arguments should be propagated as an environment variable (`MY_ARG`
-instead of `MY_ARG=blah`), so that they are not checked into your source
-control and then logged to Buildkite output by this plugin.
+  Sensitive arguments should be propagated as an environment variable (`MY_ARG`
+  instead of `MY_ARG=blah`), so that they are not checked into your source
+  control and then logged to Buildkite output by this plugin.
 
 - `branch-args` (optional, array|string)
 
