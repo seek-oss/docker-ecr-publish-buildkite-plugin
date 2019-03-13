@@ -9,6 +9,8 @@ configuration:
       type: [array, string]
     branch-tags:
       type: array
+    cache-from:
+      type: [array, string]
     default-tags:
       type: array
     dockerfile:

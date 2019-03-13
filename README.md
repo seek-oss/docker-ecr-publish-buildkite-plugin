@@ -71,6 +71,27 @@ steps:
           ecr-name: my-repo
 ```
 
+This plugin can be used in combination with the [Docker ECR
+Cache](https://github.com/seek-oss/docker-ecr-cache-buildkite-plugin) plugin to
+reuse a base image across pipeline steps:
+
+```yaml
+steps:
+  - command: npm test
+    plugins:
+      - seek-oss/docker-ecr-cache#v1.1.1:
+          target: deps
+      - docker#v3.0.1:
+          volumes:
+            - /workdir/node_modules
+  - plugins:
+      - seek-oss/docker-ecr-cache#v1.1.1:
+          target: deps
+      - seek-oss/docker-ecr-publish#v2.0.0:
+          cache-from: ecr://build-cache/my-org/my-repo
+          name: my-repo
+```
+
 ## Configuration
 
 - `args` (optional, array|string):
@@ -86,6 +107,14 @@ steps:
   Tags to push on a non-default branch build.
 
   Default: none (image is not pushed)
+
+- `cache-from` (optional, array|string):
+
+  Images for Docker to use as cache sources, e.g. a base or dependency image.
+
+  Use standard Docker image notation (e.g. `debian:jessie`,
+  `myregistry.local:5000/testing/test-image`), or the `ecr://my-repo` shorthand
+  to point to an ECR repository in the current AWS account.
 
 - `default-tags` (optional, array)
 
