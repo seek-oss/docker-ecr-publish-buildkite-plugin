@@ -110,14 +110,14 @@ reuse a base image across pipeline steps:
 steps:
   - command: npm test
     plugins:
-      - seek-oss/docker-ecr-cache#v1.1.2:
+      - seek-oss/docker-ecr-cache#v1.1.3:
           ecr-name: my-cache
           target: deps
       - docker#v3.0.1:
           volumes:
             - /workdir/node_modules
   - plugins:
-      - seek-oss/docker-ecr-cache#v1.1.2:
+      - seek-oss/docker-ecr-cache#v1.1.3:
           ecr-name: my-cache
           target: deps
       - seek-oss/docker-ecr-publish#v1.1.6:
