@@ -5,6 +5,8 @@ requirements:
   - docker
 configuration:
   properties:
+    build-context:
+      type: string
     args:
       type: [array, string]
     branch-args:
