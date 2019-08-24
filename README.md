@@ -13,7 +13,7 @@ pre-existing ECR repository `my-repo`:
 ```yaml
 steps:
   - plugins:
-      - seek-oss/docker-ecr-publish#v1.1.8:
+      - seek-oss/docker-ecr-publish#v1.2.0:
           ecr-name: my-repo
 ```
 
@@ -22,7 +22,7 @@ An alternate Dockerfile may be specified:
 ```yaml
 steps:
   - plugins:
-      - seek-oss/docker-ecr-publish#v1.1.8:
+      - seek-oss/docker-ecr-publish#v1.2.0:
           dockerfile: path/to/final.Dockerfile
           ecr-name: my-repo
 ```
@@ -35,7 +35,7 @@ environment variable from the pipeline step:
 ```yaml
 steps:
   - plugins:
-      - seek-oss/docker-ecr-publish#v1.1.8:
+      - seek-oss/docker-ecr-publish#v1.2.0:
           args:
             - BUILDKITE_BUILD_NUMBER # propagate environment variable
           branch-args:
@@ -52,7 +52,7 @@ may be listed:
 ```yaml
 steps:
   - plugins:
-      - seek-oss/docker-ecr-publish#v1.1.8:
+      - seek-oss/docker-ecr-publish#v1.2.0:
           branch-tags:
             - branch-$BUILDKITE_BUILD_NUMBER
           default-tags:
@@ -71,19 +71,19 @@ with differing `branches`:
 steps:
   - branches: '!dev !prod'
     plugins:
-      - seek-oss/docker-ecr-publish#v1.1.8:
+      - seek-oss/docker-ecr-publish#v1.2.0:
           args: BRANCH_TYPE=branch
           ecr-name: my-repo
           tags: branch-$BUILDKITE_BUILD_NUMBER
   - branches: dev
     plugins:
-      - seek-oss/docker-ecr-publish#v1.1.8:
+      - seek-oss/docker-ecr-publish#v1.2.0:
           args: BRANCH_TYPE=dev
           ecr-name: my-repo
           tags: dev-$BUILDKITE_BUILD_NUMBER
   - branches: prod
     plugins:
-      - seek-oss/docker-ecr-publish#v1.1.8:
+      - seek-oss/docker-ecr-publish#v1.2.0:
           args: BRANCH_TYPE=prod
           ecr-name: my-repo
           tags: prod-$BUILDKITE_BUILD_NUMBER
@@ -98,7 +98,7 @@ steps:
   - plugins:
       - seek-oss/create-ecr#v1.1.2:
           name: my-repo
-      - seek-oss/docker-ecr-publish#v1.1.8:
+      - seek-oss/docker-ecr-publish#v1.2.0:
           ecr-name: my-repo
 ```
 
@@ -110,17 +110,17 @@ reuse a base image across pipeline steps:
 steps:
   - command: npm test
     plugins:
-      - seek-oss/docker-ecr-cache#v1.1.3:
+      - seek-oss/docker-ecr-cache#v1.4.0:
           ecr-name: my-cache
           target: deps
       - docker#v3.0.1:
           volumes:
             - /workdir/node_modules
   - plugins:
-      - seek-oss/docker-ecr-cache#v1.1.3:
+      - seek-oss/docker-ecr-cache#v1.4.0:
           ecr-name: my-cache
           target: deps
-      - seek-oss/docker-ecr-publish#v1.1.8:
+      - seek-oss/docker-ecr-publish#v1.2.0:
           cache-from: ecr://my-cache # defaults to latest tag
           ecr-name: my-repo
 ```
