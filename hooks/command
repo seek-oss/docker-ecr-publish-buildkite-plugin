@@ -97,6 +97,7 @@ $(aws ecr get-login --no-include-email)
 echo '--- Reading plugin parameters'
 
 dockerfile="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_DOCKERFILE:-Dockerfile}"
+build_context="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_BUILD_CONTEXT:-.}"
 
 if [[ -z ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME:-} ]]; then
   echo "'ecr-name' property is required"
@@ -126,7 +127,8 @@ echo '--- Building Docker image'
 echo "Build args:" ${build_args[@]+"${build_args[@]}"}
 echo "Cache from:" ${caches_from[@]+"${caches_from[@]}"}
 echo "Dockerfile: ${dockerfile}"
-docker build --file "${dockerfile}" --tag "${image}" ${build_args[@]+"${build_args[@]}"} ${caches_from[@]+"${caches_from[@]}"} .
+echo "Build context: ${build_context}"
+docker build --file "${dockerfile}" --tag "${image}" ${build_args[@]+"${build_args[@]}"} ${caches_from[@]+"${caches_from[@]}"} "${build_context}"
 
 echo '--- Pushing Docker image'
 push_tags "${tags[@]}"

@@ -145,6 +145,12 @@ steps:
 
   Tags to push on non-default branch builds.
 
+- `build-context` (optional, string)
+
+  The Docker build context. Valid values are as per the [API](https://docs.docker.com/engine/reference/commandline/build/#extended-description)
+
+  Default: `.`
+
 - `cache-from` (optional, array|string)
 
   Images for Docker to use as cache sources, e.g. a base or dependency image.
