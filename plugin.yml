@@ -9,6 +9,8 @@ configuration:
       type: string
     args:
       type: [array, string]
+    additional-build-args:
+      type: string
     branch-args:
       type: [array, string]
     branch-tags:
