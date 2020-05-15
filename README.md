@@ -89,6 +89,19 @@ steps:
           tags: prod-$BUILDKITE_BUILD_NUMBER
 ```
 
+Additional `docker build` arguments be passed via the `additional-build-args` setting:
+
+```
+steps:
+  - command: 'echo amaze'
+    env:
+      DOCKER_BUILDKIT: "1"
+    plugins:
+      - seek-oss/docker-ecr-publish#v1.3.0:
+          additional-build-args: '--progress=plain --ssh= default=\$SSH_AUTH_SOCK'
+      - docker#v3.3.0
+```
+
 This plugin can be used in combination with the [Create
 ECR](https://github.com/seek-oss/create-ecr-buildkite-plugin) plugin to fully
 manage an ECR application repository within one pipeline step:
@@ -136,6 +149,10 @@ steps:
   Sensitive arguments should be propagated as an environment variable (`MY_ARG`
   instead of `MY_ARG=blah`), so that they are not checked into your source
   control and then logged to Buildkite output by this plugin.
+
+- `additional-build-args` (optional, string)
+
+  Allows specifying additional build arguments directly to the `docker` command.
 
 - `branch-args` (optional, array|string)
 
