@@ -136,7 +136,14 @@ echo "Cache from:" ${caches_from[@]+"${caches_from[@]}"}
 echo "Dockerfile: ${dockerfile}"
 echo "Build context: ${build_context}"
 echo "Target: ${target}"
-docker build --file "${dockerfile}" --tag "${image}" ${build_args[@]+"${build_args[@]}"} ${caches_from[@]+"${caches_from[@]}"} ${target_arg} "${build_context}"
+docker build \
+  --file "${dockerfile}" \
+  --tag "${image}" \
+  ${BUILDKITE_PLUGIN_DOCKER_ECR_CACHE_ADDITIONAL_BUILD_ARGS:-} \
+  ${build_args[@]+"${build_args[@]}"} \
+  ${caches_from[@]+"${caches_from[@]}"} \
+  ${target_arg} \
+  "${build_context}"
 
 echo '--- Pushing Docker image'
 push_tags "${tags[@]}"
