@@ -152,7 +152,7 @@ steps:
 
 - `additional-build-args` (optional, string)
 
-  Allows specifying additional build arguments directly to the `docker` command.
+  Allows specifying additional arguments directly to the `docker build` command.
 
 - `branch-args` (optional, array|string)
 
