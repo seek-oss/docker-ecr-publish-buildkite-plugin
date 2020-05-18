@@ -25,4 +25,6 @@ configuration:
       type: string
     tags:
       type: [array, string]
+    target:
+      type: string
   required: ['ecr-name']

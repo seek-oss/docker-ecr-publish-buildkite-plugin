@@ -185,6 +185,10 @@ steps:
 
   Default: `$BUILDKITE_BUILD_NUMBER` (non-removable)
 
+- `target` (optional, string)
+
+  When building a Dockerfile with multiple build stages, target can be used to specify an intermediate build stage by name as the final stage for the resulting image. This corresponds to the Docker CLI `--target` parameter.
+
 ## License
 
 MIT (see [LICENSE](LICENSE))
