@@ -97,7 +97,7 @@ steps:
     env:
       DOCKER_BUILDKIT: "1"
     plugins:
-      - seek-oss/docker-ecr-publish#v1.3.0:
+      - seek-oss/docker-ecr-publish#v1.4.0:
           additional-build-args: '--progress=plain --ssh= default=\$SSH_AUTH_SOCK'
       - docker#v3.3.0
 ```
