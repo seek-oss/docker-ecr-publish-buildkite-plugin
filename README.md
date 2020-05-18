@@ -89,9 +89,9 @@ steps:
           tags: prod-$BUILDKITE_BUILD_NUMBER
 ```
 
-Additional `docker build` arguments be passed via the `additional-build-args` setting:
+Additional `docker build` arguments can be passed via the `additional-build-args` setting:
 
-```
+```yaml
 steps:
   - command: 'echo amaze'
     env:
