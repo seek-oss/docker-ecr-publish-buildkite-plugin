@@ -213,7 +213,7 @@ steps:
 
 - `region` (optional, string)
 
-  Region the ECR registry is in, defaults to `$AWS_DEFAULT_REGION` and then `aws configure get region` if not set.
+  Region the ECR registry is in, defaults to `$AWS_DEFAULT_REGION` and then `eu-west-1` if not set.
 
 - `tags` (optional, array|string)
 
