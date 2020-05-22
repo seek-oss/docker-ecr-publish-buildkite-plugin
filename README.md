@@ -143,7 +143,7 @@ We can target registries in other accounts and regions, provided the current IAM
 ```yaml
 steps:
   - plugins:
-      - seek-oss/docker-ecr-publish#v1.4.0:
+      - seek-oss/docker-ecr-publish#v1.5.0:
           account_id: 12345678910
           region: eu-west-1
           ecr-name: my-repo
