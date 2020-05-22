@@ -2,11 +2,17 @@
 
 set -euo pipefail
 
+set -x
+
 get_ecr_url() {
   local repository_name="${1}"
+  local registry_id="${2}"
+  local region="${3}"
 
   aws ecr describe-repositories \
+    --region "${region}" \
     --repository-names "${repository_name}" \
+    --registry-id "${registry_id}" \
     --output text \
     --query 'repositories[0].repositoryUri'
 }
@@ -91,8 +97,33 @@ push_tags() {
   done
 }
 
+ecr_login() {
+  local region="${1}"
+  local account_id="${2}"
+
+  aws ecr get-login-password \
+    --region "${region}" \
+    | docker login \
+    --username AWS \
+    --password-stdin "${account_id}".dkr.ecr."${region}".amazonaws.com
+}
+
 echo '--- Logging in to ECR'
-$(aws ecr get-login --no-include-email)
+
+if [[ -n ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_REGION:-} ]]; then
+  region="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_REGION}"
+else
+  region="${AWS_DEFAULT_REGION:-$(aws configure get region)}"
+fi
+
+
+if [[ -n ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ACCOUNT_ID:-} ]]; then
+  account_id="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ACCOUNT_ID}"
+else
+  account_id="$(aws sts get-caller-identity --output text | cut -f1)"
+fi
+
+ecr_login "$region" "$account_id"
 
 echo '--- Reading plugin parameters'
 
@@ -105,7 +136,7 @@ if [[ -z ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME:-} ]]; then
   exit 1
 fi
 
-image="$(get_ecr_url "${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME}")"
+image="$(get_ecr_url "${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME}" "${account_id}" "${region}")"
 
 build_args=()
 caches_from=()
