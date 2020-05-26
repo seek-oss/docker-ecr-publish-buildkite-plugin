@@ -13,7 +13,7 @@ pre-existing ECR repository `my-repo`:
 ```yaml
 steps:
   - plugins:
-      - seek-oss/docker-ecr-publish#v1.4.0:
+      - seek-oss/docker-ecr-publish#v2.0.0:
           ecr-name: my-repo
 ```
 
@@ -22,7 +22,7 @@ An alternate Dockerfile may be specified:
 ```yaml
 steps:
   - plugins:
-      - seek-oss/docker-ecr-publish#v1.4.0:
+      - seek-oss/docker-ecr-publish#v2.0.0:
           dockerfile: path/to/final.Dockerfile
           ecr-name: my-repo
 ```
@@ -35,7 +35,7 @@ environment variable from the pipeline step:
 ```yaml
 steps:
   - plugins:
-      - seek-oss/docker-ecr-publish#v1.4.0:
+      - seek-oss/docker-ecr-publish#v2.0.0:
           args:
             - BUILDKITE_BUILD_NUMBER # propagate environment variable
           branch-args:
@@ -52,7 +52,7 @@ may be listed:
 ```yaml
 steps:
   - plugins:
-      - seek-oss/docker-ecr-publish#v1.4.0:
+      - seek-oss/docker-ecr-publish#v2.0.0:
           branch-tags:
             - branch-$BUILDKITE_BUILD_NUMBER
           default-tags:
@@ -71,19 +71,19 @@ with differing `branches`:
 steps:
   - branches: "!dev !prod"
     plugins:
-      - seek-oss/docker-ecr-publish#v1.4.0:
+      - seek-oss/docker-ecr-publish#v2.0.0:
           args: BRANCH_TYPE=branch
           ecr-name: my-repo
           tags: branch-$BUILDKITE_BUILD_NUMBER
   - branches: dev
     plugins:
-      - seek-oss/docker-ecr-publish#v1.4.0:
+      - seek-oss/docker-ecr-publish#v2.0.0:
           args: BRANCH_TYPE=dev
           ecr-name: my-repo
           tags: dev-$BUILDKITE_BUILD_NUMBER
   - branches: prod
     plugins:
-      - seek-oss/docker-ecr-publish#v1.4.0:
+      - seek-oss/docker-ecr-publish#v2.0.0:
           args: BRANCH_TYPE=prod
           ecr-name: my-repo
           tags: prod-$BUILDKITE_BUILD_NUMBER
@@ -97,7 +97,7 @@ steps:
     env:
       DOCKER_BUILDKIT: "1"
     plugins:
-      - seek-oss/docker-ecr-publish#v1.4.0:
+      - seek-oss/docker-ecr-publish#v2.0.0:
           additional-build-args: '--progress=plain --ssh= default=\$SSH_AUTH_SOCK'
       - docker#v3.5.0
 ```
@@ -111,7 +111,7 @@ steps:
   - plugins:
       - seek-oss/create-ecr#v1.1.2:
           name: my-repo
-      - seek-oss/docker-ecr-publish#v1.4.0:
+      - seek-oss/docker-ecr-publish#v2.0.0:
           ecr-name: my-repo
 ```
 
@@ -133,7 +133,7 @@ steps:
       - seek-oss/docker-ecr-cache#v1.7.0:
           ecr-name: my-cache
           target: deps
-      - seek-oss/docker-ecr-publish#v1.4.0:
+      - seek-oss/docker-ecr-publish#v2.0.0:
           cache-from: ecr://my-cache # defaults to latest tag
           ecr-name: my-repo
 ```
@@ -143,8 +143,8 @@ We can target registries in other accounts and regions, provided the current IAM
 ```yaml
 steps:
   - plugins:
-      - seek-oss/docker-ecr-publish#v1.5.0:
-          account_id: '12345678910'
+      - seek-oss/docker-ecr-publish#v2.0.0:
+          account_id: "12345678910"
           region: eu-west-1
           ecr-name: my-repo
 ```
