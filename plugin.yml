@@ -25,6 +25,10 @@ configuration:
       type: string
     ecr-name:
       type: string
+    account-id:
+      type: string
+    region:
+      type: string
     tags:
       type: [array, string]
     target:
