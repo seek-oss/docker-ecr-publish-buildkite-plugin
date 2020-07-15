@@ -41,7 +41,7 @@ read_caches_from() {
           image="${image%:*}"
         fi
 
-        cache="$(get_ecr_url "${image}"):${tag}"
+        cache="$(get_ecr_url "${image}" "${account_id}" "${region}"):${tag}"
       fi
 
       docker pull "${cache}" || true
