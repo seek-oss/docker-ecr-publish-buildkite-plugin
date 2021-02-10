@@ -46,7 +46,7 @@ steps:
 ```
 
 All images are tagged with their corresponding `$BUILDKITE_BUILD_NUMBER`, and
-images built from the default branch are tagged with `latest`. Additional tags
+images built from the default branch are tagged with `latest` unless add-latest-tag is set to false, defaults to true. Additional tags
 may be listed:
 
 ```yaml

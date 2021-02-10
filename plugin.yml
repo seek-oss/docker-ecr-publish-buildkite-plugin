@@ -33,4 +33,6 @@ configuration:
       type: [array, string]
     target:
       type: string
+    add-latest-tag:
+      type: boolean
   required: ['ecr-name']
