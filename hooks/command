@@ -147,7 +147,10 @@ read_tags 'TAGS'
 if [[ ${BUILDKITE_BRANCH} == "${BUILDKITE_PIPELINE_DEFAULT_BRANCH}" ]]; then
   read_build_args 'DEFAULT_ARGS'
   read_tags 'DEFAULT_TAGS'
-  tags+=('latest')
+  # Do not add the latest tag if pipeline has requested not to
+  if [[ "${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ADD_LATEST_TAG:-true}" =~ ^(true|on|1)$ ]] ; then
+      tags+=('latest')
+  fi
 else
   read_build_args 'BRANCH_ARGS'
   read_tags 'BRANCH_TAGS'
