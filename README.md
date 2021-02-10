@@ -2,18 +2,16 @@
 
 [![GitHub Release](https://img.shields.io/github/release/seek-oss/docker-ecr-publish-buildkite-plugin.svg)](https://github.com/seek-oss/docker-ecr-publish-buildkite-plugin/releases)
 
-A [Buildkite plugin](https://buildkite.com/docs/agent/v3/plugins) to build, tag,
-and push Docker images to Amazon ECR.
+A [Buildkite plugin](https://buildkite.com/docs/agent/v3/plugins) to build, tag, and push Docker images to Amazon ECR.
 
 ## Example
 
-The following pipeline builds the default `./Dockerfile` and pushes it to a
-pre-existing ECR repository `my-repo`:
+The following pipeline builds the default `./Dockerfile` and pushes it to a pre-existing ECR repository `my-repo`:
 
 ```yaml
 steps:
   - plugins:
-      - seek-oss/docker-ecr-publish#v2.0.1:
+      - seek-oss/docker-ecr-publish#v2.1.0:
           ecr-name: my-repo
 ```
 
@@ -22,20 +20,19 @@ An alternate Dockerfile may be specified:
 ```yaml
 steps:
   - plugins:
-      - seek-oss/docker-ecr-publish#v2.0.1:
+      - seek-oss/docker-ecr-publish#v2.1.0:
           dockerfile: path/to/final.Dockerfile
           ecr-name: my-repo
 ```
 
-[Build-time
-variables](https://docs.docker.com/engine/reference/commandline/build/#set-build-time-variables---build-arg)
-are supported, either with an explicit value, or without one to propagate an
-environment variable from the pipeline step:
+[Build-time variables](https://docs.docker.com/engine/reference/commandline/build/#set-build-time-variables---build-arg) are supported,
+either with an explicit value,
+or without one to propagate an environment variable from the pipeline step:
 
 ```yaml
 steps:
   - plugins:
-      - seek-oss/docker-ecr-publish#v2.0.1:
+      - seek-oss/docker-ecr-publish#v2.1.0:
           args:
             - BUILDKITE_BUILD_NUMBER # propagate environment variable
           branch-args:
@@ -45,14 +42,15 @@ steps:
           ecr-name: my-repo
 ```
 
-All images are tagged with their corresponding `$BUILDKITE_BUILD_NUMBER`, and
-images built from the default branch are tagged with `latest` unless add-latest-tag is set to false, defaults to true. Additional tags
-may be listed:
+All images are tagged with their corresponding `$BUILDKITE_BUILD_NUMBER`.
+
+Images built from the default branch are automatically tagged with `latest`.
+Additional tags may be listed:
 
 ```yaml
 steps:
   - plugins:
-      - seek-oss/docker-ecr-publish#v2.0.1:
+      - seek-oss/docker-ecr-publish#v2.1.0:
           branch-tags:
             - branch-$BUILDKITE_BUILD_NUMBER
           default-tags:
@@ -64,26 +62,36 @@ steps:
             - any-$BUILDKITE_BUILD_NUMBER
 ```
 
-More complex branch workflows can be achieved by using multiple pipeline steps
-with differing `branches`:
+If you're working with [immutable image tags](https://docs.aws.amazon.com/AmazonECR/latest/userguide/image-tag-mutability.html),
+you can disable the `latest` tag with the `add-latest-tag` property:
+
+```yaml
+steps:
+  - plugins:
+      - seek-oss/docker-ecr-publish#v2.1.0:
+          add-latest-tag: false
+          ecr-name: my-repo
+```
+
+More complex branch workflows can be achieved by using multiple pipeline steps with differing `branches`:
 
 ```yaml
 steps:
   - branches: '!dev !prod'
     plugins:
-      - seek-oss/docker-ecr-publish#v2.0.1:
+      - seek-oss/docker-ecr-publish#v2.1.0:
           args: BRANCH_TYPE=branch
           ecr-name: my-repo
           tags: branch-$BUILDKITE_BUILD_NUMBER
   - branches: dev
     plugins:
-      - seek-oss/docker-ecr-publish#v2.0.1:
+      - seek-oss/docker-ecr-publish#v2.1.0:
           args: BRANCH_TYPE=dev
           ecr-name: my-repo
           tags: dev-$BUILDKITE_BUILD_NUMBER
   - branches: prod
     plugins:
-      - seek-oss/docker-ecr-publish#v2.0.1:
+      - seek-oss/docker-ecr-publish#v2.1.0:
           args: BRANCH_TYPE=prod
           ecr-name: my-repo
           tags: prod-$BUILDKITE_BUILD_NUMBER
@@ -97,27 +105,23 @@ steps:
     env:
       DOCKER_BUILDKIT: '1'
     plugins:
-      - seek-oss/docker-ecr-publish#v2.0.1:
+      - seek-oss/docker-ecr-publish#v2.1.0:
           additional-build-args: '--progress=plain --ssh= default=\$SSH_AUTH_SOCK'
       - docker#v3.5.0
 ```
 
-This plugin can be used in combination with the [Create
-ECR](https://github.com/seek-oss/create-ecr-buildkite-plugin) plugin to fully
-manage an ECR application repository within one pipeline step:
+This plugin can be used in combination with the [Create ECR](https://github.com/seek-oss/create-ecr-buildkite-plugin) plugin to fully manage an ECR application repository within one pipeline step:
 
 ```yaml
 steps:
   - plugins:
       - seek-oss/create-ecr#v1.1.2:
           name: my-repo
-      - seek-oss/docker-ecr-publish#v2.0.1:
+      - seek-oss/docker-ecr-publish#v2.1.0:
           ecr-name: my-repo
 ```
 
-This plugin can be used in combination with the [Docker ECR
-Cache](https://github.com/seek-oss/docker-ecr-cache-buildkite-plugin) plugin to
-reuse a base image across pipeline steps:
+This plugin can be used in combination with the [Docker ECR Cache](https://github.com/seek-oss/docker-ecr-cache-buildkite-plugin) plugin to reuse a base image across pipeline steps:
 
 ```yaml
 steps:
@@ -133,7 +137,7 @@ steps:
       - seek-oss/docker-ecr-cache#v1.7.0:
           ecr-name: my-cache
           target: deps
-      - seek-oss/docker-ecr-publish#v2.0.1:
+      - seek-oss/docker-ecr-publish#v2.1.0:
           cache-from: ecr://my-cache # defaults to latest tag
           ecr-name: my-repo
 ```
@@ -143,7 +147,7 @@ We can target registries in other accounts and regions, provided the current IAM
 ```yaml
 steps:
   - plugins:
-      - seek-oss/docker-ecr-publish#v2.0.1:
+      - seek-oss/docker-ecr-publish#v2.1.0:
           account_id: '12345678910'
           region: eu-west-1
           ecr-name: my-repo
@@ -160,6 +164,12 @@ steps:
   Sensitive arguments should be propagated as an environment variable (`MY_ARG`
   instead of `MY_ARG=blah`), so that they are not checked into your source
   control and then logged to Buildkite output by this plugin.
+
+- `add-latest-tag` (optional, boolean)
+
+  Whether to add a `latest` tag to default branch builds.
+
+  Default: `true`
 
 - `additional-build-args` (optional, string)
 
