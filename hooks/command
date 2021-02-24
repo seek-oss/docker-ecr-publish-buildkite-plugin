@@ -148,7 +148,6 @@ caches_from=()
 tags=("${BUILDKITE_BUILD_NUMBER}")
 
 read_build_args 'ARGS'
-read_caches_from
 read_tags 'TAGS'
 
 if [[ ${BUILDKITE_BRANCH} == "${BUILDKITE_PIPELINE_DEFAULT_BRANCH}" ]]; then
@@ -193,6 +192,7 @@ fi
 
 image="$(get_ecr_url "${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME}" "${account_id}" "${region}")"
 
+read_caches_from
 
 echo '--- Building Docker image'
 if [[ -n ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ADDITIONAL_BUILD_ARGS:-} ]]; then
