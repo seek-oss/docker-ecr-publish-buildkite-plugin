@@ -90,7 +90,7 @@ push_tags() {
 
   for tag in "${tags[@]}"; do
     echo "Tag: '${tag}'"
-    docker tag "${image}" "${image}:${tag}"
+    docker tag "${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME}" "${image}:${tag}"
     docker push "${image}:${tag}"
   done
 }
