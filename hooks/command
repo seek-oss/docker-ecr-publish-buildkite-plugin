@@ -41,7 +41,7 @@ read_caches_from() {
           image="${image%:*}"
         fi
 
-        echo '--- Logging in to ECR, region: ${region}'
+        echo "Logging in to ECR, region: ${region}"
         ecr_login "$region" "$account_id"
 
         cache="$(get_ecr_url "${image}" "${account_id}" "${region}"):${tag}"
@@ -91,7 +91,7 @@ read_list_property() {
 push_tags() {
   local tags=("${@}")
 
-  echo '--- Logging in to ECR, region: ${region}'
+  echo "Logging in to ECR, region: ${region}"
   ecr_login "$region" "$account_id"
 
   image="$(get_ecr_url "${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME}" "${account_id}" "${region}")"
