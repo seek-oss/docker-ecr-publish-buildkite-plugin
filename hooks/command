@@ -41,6 +41,9 @@ read_caches_from() {
           image="${image%:*}"
         fi
 
+        echo '--- Logging in to ECR, region: ${region}'
+        ecr_login "$region" "$account_id"
+
         cache="$(get_ecr_url "${image}" "${account_id}" "${region}"):${tag}"
       fi
 
@@ -88,6 +91,11 @@ read_list_property() {
 push_tags() {
   local tags=("${@}")
 
+  echo '--- Logging in to ECR, region: ${region}'
+  ecr_login "$region" "$account_id"
+
+  image="$(get_ecr_url "${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME}" "${account_id}" "${region}")"
+
   for tag in "${tags[@]}"; do
     echo "Tag: '${tag}'"
     docker tag "${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME}" "${image}:${tag}"
@@ -106,35 +114,10 @@ ecr_login() {
     --password-stdin "${account_id}".dkr.ecr."${region}".amazonaws.com
 }
 
-# echo '--- Logging in to ECR'
-# 
-# if [[ -n ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_REGION:-} ]]; then
-#   region="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_REGION}"
-# else
-#   region="${AWS_DEFAULT_REGION:-eu-west-1}"
-# fi
-# 
-# 
-# if [[ -n ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ACCOUNT_ID:-} ]]; then
-#   account_id="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ACCOUNT_ID}"
-# else
-#   account_id="$(aws sts get-caller-identity --output text | cut -f1)"
-# fi
-# 
-# ecr_login "$region" "$account_id"
-# 
-# echo '--- Reading plugin parameters'
-# 
-# dockerfile="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_DOCKERFILE:-Dockerfile}"
-# build_context="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_BUILD_CONTEXT:-.}"
-# target="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_TARGET:-}"
-# 
-# if [[ -z ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME:-} ]]; then
-#   echo "'ecr-name' property is required"
-#   exit 1
-# fi
-# 
-# image="$(get_ecr_url "${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME}" "${account_id}" "${region}")"
+if [[ -z ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME:-} ]]; then
+  echo "'ecr-name' property is required"
+  exit 1
+fi
 
 echo '--- Reading plugin parameters'
 
@@ -168,8 +151,6 @@ if [[ -n ${target} ]]; then
   target_arg="--target ${target}"
 fi
 
-echo '--- Logging in to ECR'
-
 if [[ -n ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_REGION:-} ]]; then
   region="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_REGION}"
 else
@@ -182,15 +163,6 @@ if [[ -n ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ACCOUNT_ID:-} ]]; then
 else
   account_id="$(aws sts get-caller-identity --output text | cut -f1)"
 fi
-
-ecr_login "$region" "$account_id"
-
-if [[ -z ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME:-} ]]; then
-  echo "'ecr-name' property is required"
-  exit 1
-fi
-
-image="$(get_ecr_url "${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME}" "${account_id}" "${region}")"
 
 read_caches_from
 
