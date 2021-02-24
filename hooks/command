@@ -205,7 +205,7 @@ echo "Build context: ${build_context}"
 echo "Target: ${target}"
 docker build \
   --file "${dockerfile}" \
-  --tag "${image}" \
+  --tag "${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME}" \
   ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ADDITIONAL_BUILD_ARGS:-} \
   ${build_args[@]+"${build_args[@]}"} \
   ${caches_from[@]+"${caches_from[@]}"} \
