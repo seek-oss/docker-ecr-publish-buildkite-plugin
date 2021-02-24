@@ -106,22 +106,35 @@ ecr_login() {
     --password-stdin "${account_id}".dkr.ecr."${region}".amazonaws.com
 }
 
-echo '--- Logging in to ECR'
-
-if [[ -n ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_REGION:-} ]]; then
-  region="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_REGION}"
-else
-  region="${AWS_DEFAULT_REGION:-eu-west-1}"
-fi
-
-
-if [[ -n ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ACCOUNT_ID:-} ]]; then
-  account_id="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ACCOUNT_ID}"
-else
-  account_id="$(aws sts get-caller-identity --output text | cut -f1)"
-fi
-
-ecr_login "$region" "$account_id"
+# echo '--- Logging in to ECR'
+# 
+# if [[ -n ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_REGION:-} ]]; then
+#   region="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_REGION}"
+# else
+#   region="${AWS_DEFAULT_REGION:-eu-west-1}"
+# fi
+# 
+# 
+# if [[ -n ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ACCOUNT_ID:-} ]]; then
+#   account_id="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ACCOUNT_ID}"
+# else
+#   account_id="$(aws sts get-caller-identity --output text | cut -f1)"
+# fi
+# 
+# ecr_login "$region" "$account_id"
+# 
+# echo '--- Reading plugin parameters'
+# 
+# dockerfile="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_DOCKERFILE:-Dockerfile}"
+# build_context="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_BUILD_CONTEXT:-.}"
+# target="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_TARGET:-}"
+# 
+# if [[ -z ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME:-} ]]; then
+#   echo "'ecr-name' property is required"
+#   exit 1
+# fi
+# 
+# image="$(get_ecr_url "${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME}" "${account_id}" "${region}")"
 
 echo '--- Reading plugin parameters'
 
@@ -129,12 +142,6 @@ dockerfile="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_DOCKERFILE:-Dockerfile}"
 build_context="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_BUILD_CONTEXT:-.}"
 target="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_TARGET:-}"
 
-if [[ -z ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME:-} ]]; then
-  echo "'ecr-name' property is required"
-  exit 1
-fi
-
-image="$(get_ecr_url "${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME}" "${account_id}" "${region}")"
 
 build_args=()
 caches_from=()
@@ -161,6 +168,31 @@ target_arg=""
 if [[ -n ${target} ]]; then
   target_arg="--target ${target}"
 fi
+
+echo '--- Logging in to ECR'
+
+if [[ -n ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_REGION:-} ]]; then
+  region="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_REGION}"
+else
+  region="${AWS_DEFAULT_REGION:-eu-west-1}"
+fi
+
+
+if [[ -n ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ACCOUNT_ID:-} ]]; then
+  account_id="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ACCOUNT_ID}"
+else
+  account_id="$(aws sts get-caller-identity --output text | cut -f1)"
+fi
+
+ecr_login "$region" "$account_id"
+
+if [[ -z ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME:-} ]]; then
+  echo "'ecr-name' property is required"
+  exit 1
+fi
+
+image="$(get_ecr_url "${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME}" "${account_id}" "${region}")"
+
 
 echo '--- Building Docker image'
 if [[ -n ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ADDITIONAL_BUILD_ARGS:-} ]]; then
