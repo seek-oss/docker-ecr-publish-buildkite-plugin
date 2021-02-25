@@ -149,7 +149,9 @@ steps:
   - plugins:
       - seek-oss/docker-ecr-publish#v2.1.0:
           account_id: '12345678910'
-          region: eu-west-1
+          regions:
+            - eu-west-1
+            - us-west-2
           ecr-name: my-repo
 ```
 
@@ -221,7 +223,7 @@ steps:
 
   Account ID for ECR registry, defaults to output of `aws sts get-caller-identity` e.g. current account ID.
 
-- `region` (optional, string)
+- `regions` (optional, array|string)
 
   Region the ECR registry is in, defaults to `$AWS_DEFAULT_REGION` and then `eu-west-1` if not set.
 
