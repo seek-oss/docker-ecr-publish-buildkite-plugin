@@ -1,6 +1,6 @@
 name: Docker ECR Publish
 description: Build, tag, and push Docker images to Amazon ECR
-author: https://github.com/seek-oss
+author: https://github.com/raksha1
 requirements:
   - docker
 configuration:

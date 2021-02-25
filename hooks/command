@@ -141,6 +141,7 @@ dockerfile="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_DOCKERFILE:-Dockerfile}"
 build_context="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_BUILD_CONTEXT:-.}"
 target="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_TARGET:-}"
 
+echo "Dockerfile: ${dockerfile}"
 echo "Regions: ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_REGIONS}"
 build_args=()
 caches_from=()
