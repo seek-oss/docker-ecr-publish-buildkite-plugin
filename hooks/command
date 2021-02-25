@@ -67,10 +67,15 @@ read_tags() {
 }
 
 read_regions() {
-  if read_list_property 'REGIONS'; then
-    for region in "${result[@]}"; do
-      regions+=("${region}")
-    done
+
+  if [[ -z ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_REGIONS_0:-} ]]; then
+    regions+=("${AWS_DEFAULT_REGION:-eu-west-1}")
+  else
+    if read_list_property 'REGIONS'; then
+      for region in "${result[@]}"; do
+        regions+=("${region}")
+      done
+    fi
   fi
 }
 
@@ -141,13 +146,12 @@ dockerfile="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_DOCKERFILE:-Dockerfile}"
 build_context="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_BUILD_CONTEXT:-.}"
 target="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_TARGET:-}"
 
-echo "Dockerfile: ${dockerfile}"
-echo "Regions: ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_REGION}"
 build_args=()
 caches_from=()
 tags=("${BUILDKITE_BUILD_NUMBER}")
 
 regions=()
+
 read_build_args 'ARGS'
 read_tags 'TAGS'
 
@@ -169,15 +173,7 @@ if [[ -n ${target} ]]; then
   target_arg="--target ${target}"
 fi
 
-if [[ -n ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_REGION:-} ]]; then
-  echo "Get region list"
-  read_regions
-  echo "regions: ${regions[@]}"
-else
-  echo "Use default region"
-  regions+=("${AWS_DEFAULT_REGION:-eu-west-1}")
-fi
-
+read_regions
 
 if [[ -n ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ACCOUNT_ID:-} ]]; then
   account_id="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ACCOUNT_ID}"
