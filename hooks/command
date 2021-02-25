@@ -169,8 +169,11 @@ if [[ -n ${target} ]]; then
 fi
 
 if [[ -n ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_REGIONS:-} ]]; then
+  echo "Get region list"
   read_regions
+  echo "regions: ${regions[@]}"
 else
+  echo "Use default region"
   regions+=("${AWS_DEFAULT_REGION:-eu-west-1}")
 fi
 
