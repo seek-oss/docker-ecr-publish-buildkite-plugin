@@ -27,8 +27,8 @@ configuration:
       type: string
     account-id:
       type: string
-    region:
-      type: string
+    regions:
+      type: [array, string]
     tags:
       type: [array, string]
     target:
