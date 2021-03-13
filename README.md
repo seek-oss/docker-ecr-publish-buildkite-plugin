@@ -237,8 +237,9 @@ steps:
 
 - `save-digest-as-metadata` (optional, string)
 
-  Allows you specify if the digest of the docker image should be saved to a buildkite metadata variable.
-  Please specify the name of the metadata variable e.g. `save-digest-as-metadata: runtime-image-digest`
+  Specify a Buildkite metadata variable to save the Docker image digest to,
+  e.g. `save-digest-as-metadata: runtime-image-digest`.
+
 ## License
 
 MIT (see [LICENSE](LICENSE))

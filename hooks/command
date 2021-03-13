@@ -182,7 +182,7 @@ docker build \
 
 save_digest_as_metadata="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_SAVE_DIGEST_AS_METADATA:-}"
 if [[ -n ${save_digest_as_metadata} ]]; then
-  echo "--- Saving digest of image to buildkite metadata: ${save_digest_as_metadata}"
+  echo "--- Saving Docker image digest to Buildkite metadata: ${save_digest_as_metadata}"
   image_digest="$(docker images --no-trunc --quiet "${image}:latest")"
 
   buildkite-agent meta-data set "${save_digest_as_metadata}" "${image_digest}"
