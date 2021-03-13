@@ -41,12 +41,19 @@ read_caches_from() {
           image="${image%:*}"
         fi
 
-        cache="$(get_ecr_url "${image}" "${account_id}" "${region}"):${tag}"
+        for region in "${regions[@]}"; do
+
+          echo "Logging in to ECR, region: ${region}"
+          ecr_login "$region" "$account_id"
+
+          cache="$(get_ecr_url "${image}" "${account_id}" "${region}"):${tag}"
+
+          docker pull "${cache}" || true
+          caches_from+=('--cache-from' "${cache}")
+
+        done
       fi
 
-      docker pull "${cache}" || true
-
-      caches_from+=('--cache-from' "${cache}")
     done
   fi
 }
@@ -56,6 +63,20 @@ read_tags() {
 
   if read_list_property "${property}"; then
     tags+=("${result[@]}")
+  fi
+}
+
+read_regions() {
+
+  if read_list_property 'REGION' && read_list_property 'REGIONS'; then
+    echo "Both 'region' and 'regions' cannot be set"
+    exit 1
+  elif read_list_property 'REGION' || read_list_property 'REGIONS'; then
+    for region in "${result[@]}"; do
+      regions+=("${region}")
+    done
+  else
+    regions+=("${AWS_DEFAULT_REGION:-eu-west-1}")
   fi
 }
 
@@ -88,10 +109,19 @@ read_list_property() {
 push_tags() {
   local tags=("${@}")
 
-  for tag in "${tags[@]}"; do
-    echo "Tag: '${tag}'"
-    docker tag "${image}" "${image}:${tag}"
-    docker push "${image}:${tag}"
+  for region in "${regions[@]}"; do
+
+    echo "Logging in to ECR, region: ${region}"
+    ecr_login "$region" "$account_id"
+
+    image="$(get_ecr_url "${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME}" "${account_id}" "${region}")"
+
+    for tag in "${tags[@]}"; do
+      echo "Tag: '${tag}'"
+      docker tag "${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME}" "${image}:${tag}"
+      docker push "${image}:${tag}"
+    done
+
   done
 }
 
@@ -106,22 +136,10 @@ ecr_login() {
     --password-stdin "${account_id}".dkr.ecr."${region}".amazonaws.com
 }
 
-echo '--- Logging in to ECR'
-
-if [[ -n ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_REGION:-} ]]; then
-  region="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_REGION}"
-else
-  region="${AWS_DEFAULT_REGION:-eu-west-1}"
+if [[ -z ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME:-} ]]; then
+  echo "'ecr-name' property is required"
+  exit 1
 fi
-
-
-if [[ -n ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ACCOUNT_ID:-} ]]; then
-  account_id="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ACCOUNT_ID}"
-else
-  account_id="$(aws sts get-caller-identity --output text | cut -f1)"
-fi
-
-ecr_login "$region" "$account_id"
 
 echo '--- Reading plugin parameters'
 
@@ -129,19 +147,13 @@ dockerfile="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_DOCKERFILE:-Dockerfile}"
 build_context="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_BUILD_CONTEXT:-.}"
 target="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_TARGET:-}"
 
-if [[ -z ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME:-} ]]; then
-  echo "'ecr-name' property is required"
-  exit 1
-fi
-
-image="$(get_ecr_url "${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME}" "${account_id}" "${region}")"
-
 build_args=()
 caches_from=()
 tags=("${BUILDKITE_BUILD_NUMBER}")
 
+regions=()
+
 read_build_args 'ARGS'
-read_caches_from
 read_tags 'TAGS'
 
 if [[ ${BUILDKITE_BRANCH} == "${BUILDKITE_PIPELINE_DEFAULT_BRANCH}" ]]; then
@@ -162,6 +174,16 @@ if [[ -n ${target} ]]; then
   target_arg="--target ${target}"
 fi
 
+read_regions
+
+if [[ -n ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ACCOUNT_ID:-} ]]; then
+  account_id="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ACCOUNT_ID}"
+else
+  account_id="$(aws sts get-caller-identity --output text | cut -f1)"
+fi
+
+read_caches_from
+
 echo '--- Building Docker image'
 if [[ -n ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ADDITIONAL_BUILD_ARGS:-} ]]; then
   echo "Additional build args: ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ADDITIONAL_BUILD_ARGS}"
@@ -173,7 +195,7 @@ echo "Build context: ${build_context}"
 echo "Target: ${target}"
 docker build \
   --file "${dockerfile}" \
-  --tag "${image}" \
+  --tag "${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME}" \
   ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ADDITIONAL_BUILD_ARGS:-} \
   ${build_args[@]+"${build_args[@]}"} \
   ${caches_from[@]+"${caches_from[@]}"} \
