@@ -235,6 +235,11 @@ steps:
 
   When building a Dockerfile with multiple build stages, target can be used to specify an intermediate build stage by name as the final stage for the resulting image. This corresponds to the Docker CLI `--target` parameter.
 
+- `save-digest-as-metadata` (optional, string)
+
+  Specify a Buildkite metadata variable to save the Docker image digest to,
+  e.g. `save-digest-as-metadata: runtime-image-digest`.
+
 ## License
 
 MIT (see [LICENSE](LICENSE))

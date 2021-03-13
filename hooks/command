@@ -180,5 +180,13 @@ docker build \
   ${target_arg} \
   "${build_context}"
 
+save_digest_as_metadata="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_SAVE_DIGEST_AS_METADATA:-}"
+if [[ -n ${save_digest_as_metadata} ]]; then
+  echo "--- Saving Docker image digest to Buildkite metadata: ${save_digest_as_metadata}"
+  image_digest="$(docker images --no-trunc --quiet "${image}:latest")"
+
+  buildkite-agent meta-data set "${save_digest_as_metadata}" "${image_digest}"
+fi
+
 echo '--- Pushing Docker image'
 push_tags "${tags[@]}"

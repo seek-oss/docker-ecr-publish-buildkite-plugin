@@ -35,4 +35,6 @@ configuration:
       type: string
     add-latest-tag:
       type: boolean
+    save-digest-as-metadata:
+      type: string
   required: ['ecr-name']
