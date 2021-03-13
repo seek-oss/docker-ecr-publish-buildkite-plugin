@@ -142,7 +142,16 @@ steps:
           ecr-name: my-repo
 ```
 
-We can target registries in other accounts and regions, provided the current IAM user/role has the ability to auth against said account/registry:
+We can target registries in other accounts and region(s), provided the current IAM user/role has the ability to auth against said account/registry:
+
+```yaml
+steps:
+  - plugins:
+      - seek-oss/docker-ecr-publish#v2.1.0:
+          account_id: '12345678910'
+          region: eu-west-1
+          ecr-name: my-repo
+```
 
 ```yaml
 steps:
@@ -223,9 +232,13 @@ steps:
 
   Account ID for ECR registry, defaults to output of `aws sts get-caller-identity` e.g. current account ID.
 
-- `regions` (optional, array|string)
+- `region` (optional, array|string)
 
   Region the ECR registry is in, defaults to `$AWS_DEFAULT_REGION` and then `eu-west-1` if not set.
+
+- `regions` (optional, array|string)
+
+  Same as `region`. Both `region` and `regions` cannot be set. But they are optional.
 
 - `tags` (optional, array|string)
 

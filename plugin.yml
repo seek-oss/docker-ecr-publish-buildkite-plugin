@@ -27,6 +27,8 @@ configuration:
       type: string
     account-id:
       type: string
+    region:
+      type: [array, string]
     regions:
       type: [array, string]
     tags:
@@ -36,3 +38,5 @@ configuration:
     add-latest-tag:
       type: boolean
   required: ['ecr-name']
+  not:
+    required: ['region', 'regions']
