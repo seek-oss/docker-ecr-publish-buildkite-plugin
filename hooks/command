@@ -68,14 +68,15 @@ read_tags() {
 
 read_regions() {
 
-  if [[ -z ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_REGION_0:-} && -z ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_REGIONS_0:-} ]]; then
-    regions+=("${AWS_DEFAULT_REGION:-eu-west-1}")
+  if read_list_property 'REGION' && read_list_property 'REGIONS'; then
+    echo "Both 'region' and 'regions' cannot be set"
+    exit 1
+  elif read_list_property 'REGION' || read_list_property 'REGIONS'; then
+    for region in "${result[@]}"; do
+      regions+=("${region}")
+    done
   else
-    if read_list_property 'REGION' || read_list_property 'REGIONS'; then
-      for region in "${result[@]}"; do
-        regions+=("${region}")
-      done
-    fi
+    regions+=("${AWS_DEFAULT_REGION:-eu-west-1}")
   fi
 }
 
