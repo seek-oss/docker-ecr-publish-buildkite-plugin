@@ -238,7 +238,7 @@ steps:
 
 - `regions` (optional, array|string)
 
-  Same as `region`. Both `region` and `regions` cannot be set. But they are optional.
+  Same as `region`. Both properties are optional, and they cannot be set at the same time.
 
 - `tags` (optional, array|string)
 
