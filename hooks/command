@@ -71,7 +71,7 @@ read_regions() {
   if [[ -z ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_REGION_0:-} && -z ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_REGIONS_0:-} ]]; then
     regions+=("${AWS_DEFAULT_REGION:-eu-west-1}")
   else
-    if [[ read_list_property 'REGION' ]] || [[ read_list_property 'REGIONS' ]]; then
+    if read_list_property 'REGION' || read_list_property 'REGIONS'; then
       for region in "${result[@]}"; do
         regions+=("${region}")
       done
