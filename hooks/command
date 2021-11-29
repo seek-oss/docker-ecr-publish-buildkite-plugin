@@ -27,6 +27,9 @@ read_build_args() {
 
 read_caches_from() {
   if read_list_property 'CACHE_FROM'; then
+    CURRENT_LOGGED_IN_REGION=""
+    CURRENT_LOGGED_IN_ACCOUNT=""
+
     for cache in "${result[@]}"; do
       if [[ ${cache} == ecr://* ]]; then
         local image
@@ -43,14 +46,19 @@ read_caches_from() {
 
         for region in "${regions[@]}"; do
 
-          echo "Logging in to ECR, region: ${region}"
-          ecr_login "$region" "$account_id"
+          if ! { [ "${CURRENT_LOGGED_IN_REGION}" = "${region}" ] && [ "${CURRENT_LOGGED_IN_ACCOUNT}" = "${account_id}" ]; }; then
+            echo "Logging in to ECR, region: ${region}"
+            ecr_login "$region" "$account_id"
+            CURRENT_LOGGED_IN_REGION="${region}"
+            CURRENT_LOGGED_IN_ACCOUNT="${account_id}"
+          fi
 
           cache="$(get_ecr_url "${image}" "${account_id}" "${region}"):${tag}"
 
-          docker pull "${cache}" || true
-          caches_from+=('--cache-from' "${cache}")
-
+          if docker pull "${cache}"; then
+            caches_from+=('--cache-from' "${cache}")
+            break
+          fi
         done
       fi
 
@@ -111,6 +119,7 @@ push_tags() {
 
   for region in "${regions[@]}"; do
 
+    local -A push_tasks
     echo "Logging in to ECR, region: ${region}"
     ecr_login "$region" "$account_id"
 
@@ -119,8 +128,20 @@ push_tags() {
     for tag in "${tags[@]}"; do
       echo "Tag: '${tag}'"
       docker tag "${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME}" "${image}:${tag}"
-      docker push "${image}:${tag}"
+      docker push "${image}:${tag}" &
+      local backgrounded_pid=$!
+      push_tasks[${backgrounded_pid}]="${region}-${image}:${tag}"
     done
+    # Wait for completion
+    for pid in "${!push_tasks[@]}"; do
+      if wait "$pid"; then
+        echo "[${push_tasks[${pid}]}] Push task succeeded"
+      else
+        echo "[${push_tasks[${pid}]}] Push task failed"
+        exit 1
+      fi
+    done
+    unset push_tasks
 
   done
 }
