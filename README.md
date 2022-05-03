@@ -11,7 +11,7 @@ The following pipeline builds the default `./Dockerfile` and pushes it to a pre-
 ```yaml
 steps:
   - plugins:
-      - seek-oss/docker-ecr-publish#v2.3.0:
+      - seek-oss/docker-ecr-publish#v2.4.0:
           ecr-name: my-repo
 ```
 
@@ -20,7 +20,7 @@ An alternate Dockerfile may be specified:
 ```yaml
 steps:
   - plugins:
-      - seek-oss/docker-ecr-publish#v2.3.0:
+      - seek-oss/docker-ecr-publish#v2.4.0:
           dockerfile: path/to/final.Dockerfile
           ecr-name: my-repo
 ```
@@ -32,7 +32,7 @@ or without one to propagate an environment variable from the pipeline step:
 ```yaml
 steps:
   - plugins:
-      - seek-oss/docker-ecr-publish#v2.3.0:
+      - seek-oss/docker-ecr-publish#v2.4.0:
           args:
             - BUILDKITE_BUILD_NUMBER # propagate environment variable
           branch-args:
@@ -68,7 +68,7 @@ you can disable the `latest` tag with the `add-latest-tag` property:
 ```yaml
 steps:
   - plugins:
-      - seek-oss/docker-ecr-publish#v2.3.0:
+      - seek-oss/docker-ecr-publish#v2.4.0:
           add-latest-tag: false
           ecr-name: my-repo
 ```
@@ -79,19 +79,19 @@ More complex branch workflows can be achieved by using multiple pipeline steps w
 steps:
   - branches: '!dev !prod'
     plugins:
-      - seek-oss/docker-ecr-publish#v2.3.0:
+      - seek-oss/docker-ecr-publish#v2.4.0:
           args: BRANCH_TYPE=branch
           ecr-name: my-repo
           tags: branch-$BUILDKITE_BUILD_NUMBER
   - branches: dev
     plugins:
-      - seek-oss/docker-ecr-publish#v2.3.0:
+      - seek-oss/docker-ecr-publish#v2.4.0:
           args: BRANCH_TYPE=dev
           ecr-name: my-repo
           tags: dev-$BUILDKITE_BUILD_NUMBER
   - branches: prod
     plugins:
-      - seek-oss/docker-ecr-publish#v2.3.0:
+      - seek-oss/docker-ecr-publish#v2.4.0:
           args: BRANCH_TYPE=prod
           ecr-name: my-repo
           tags: prod-$BUILDKITE_BUILD_NUMBER
