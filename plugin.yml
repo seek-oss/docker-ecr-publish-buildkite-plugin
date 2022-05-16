@@ -39,6 +39,13 @@ configuration:
       type: boolean
     save-digest-as-metadata:
       type: string
+    buildkit:
+      properties:
+        inline-cache: 
+          type: boolean
+        enable: 
+          type: boolean
+
   required: ['ecr-name']
   not:
     required: ['region', 'regions']

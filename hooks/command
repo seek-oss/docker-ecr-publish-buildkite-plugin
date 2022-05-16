@@ -25,6 +25,32 @@ read_build_args() {
   fi
 }
 
+enable_disable_buildkit() { 
+  local property="BUILDKIT_ENABLE"
+  if read_list_property "${property}"; then
+    for arg in "${result[@]}"; do
+      if [[ "$arg" == "false" ]]; then
+        enable_buildkit=0
+      fi
+    done
+  fi
+}
+
+enable_disable_inline_cache() { 
+  local property="BUILDKIT_INLINE_CACHE"
+  if read_list_property "${property}"; then
+    for arg in "${result[@]}"; do
+      if [[ "$arg" == "false" ]]; then
+        enable_inline_cache=0
+      fi
+    done
+  fi
+
+  if [[ "$enable_inline_cache" == "1" ]]; then
+    build_args+=('--build-arg' "BUILDKITE_INLINE_CACHE=1")
+  fi
+}
+
 read_caches_from() {
   if read_list_property 'CACHE_FROM'; then
     CURRENT_LOGGED_IN_REGION=""
@@ -168,12 +194,17 @@ dockerfile="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_DOCKERFILE:-Dockerfile}"
 build_context="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_BUILD_CONTEXT:-.}"
 target="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_TARGET:-}"
 
+# by default enable buildkit
+enable_buildkit=1
+# by default eanble inline cache export import
+enable_inline_cache=1
 build_args=()
 caches_from=()
 tags=("${BUILDKITE_BUILD_NUMBER}")
 
 regions=()
-
+enable_disable_buildkit
+enable_disable_inline_cache
 read_build_args 'ARGS'
 read_tags 'TAGS'
 
@@ -214,6 +245,7 @@ echo "Cache from:" ${caches_from[@]+"${caches_from[@]}"}
 echo "Dockerfile: ${dockerfile}"
 echo "Build context: ${build_context}"
 echo "Target: ${target}"
+DOCKER_BUILDKIT=${enable_buildkit} \
 docker build \
   --file "${dockerfile}" \
   --tag "${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME}" \
