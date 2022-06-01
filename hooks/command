@@ -25,6 +25,52 @@ read_build_args() {
   fi
 }
 
+read_build_driver() { 
+  # read driver
+  local property="DRIVER"
+  enable_buildkit=0 # set default
+  if read_list_property "${property}"; then
+    for arg in "${result[@]}"; do
+      if [[ "$arg" == "buildkit" ]]; then
+        echo "Chosing driver: buildkit"
+        enable_buildkit=1
+
+        # read cache metadata settings if driver=buildkit
+        property="DISABLE_CACHE_METADATA"
+        enable_cache_metadata=1
+        if read_list_property "${property}"; then
+          for arg in "${result[@]}"; do
+            if [[ "$arg" == "true" ]]; then
+              echo "Disabling metadata"
+              enable_cache_metadata=0
+              break
+            fi
+          done
+        fi
+        
+        build_args+=('--build-arg' "BUILDKIT_INLINE_CACHE=${enable_cache_metadata}")
+
+        # read progress output if driver=buildkit
+        property="PROGRESS_OUTPUT"
+        progress_output="plain" # set default
+        if read_list_property "${property}"; then
+          for arg in "${result[@]}"; do
+            echo "Setting progress output to: ${arg}"
+            progress_output="${arg}"
+            break
+          done
+        fi
+
+        build_args+=('--progress' "${progress_output}")
+
+      else 
+        echo "Chosing driver: legacy"
+        enable_buildkit=0
+      fi
+    done
+  fi
+}
+
 read_caches_from() {
   if read_list_property 'CACHE_FROM'; then
     CURRENT_LOGGED_IN_REGION=""
@@ -168,12 +214,14 @@ dockerfile="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_DOCKERFILE:-Dockerfile}"
 build_context="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_BUILD_CONTEXT:-.}"
 target="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_TARGET:-}"
 
+# by default disable buildkit
+enable_buildkit=0
 build_args=()
 caches_from=()
 tags=("${BUILDKITE_BUILD_NUMBER}")
 
 regions=()
-
+read_build_driver
 read_build_args 'ARGS'
 read_tags 'TAGS'
 
@@ -209,12 +257,14 @@ echo '--- Building Docker image'
 if [[ -n ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ADDITIONAL_BUILD_ARGS:-} ]]; then
   echo "Additional build args: ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ADDITIONAL_BUILD_ARGS}"
 fi
+echo "Buildkit:" ${enable_buildkit}
 echo "Build args:" ${build_args[@]+"${build_args[@]}"}
 echo "Cache from:" ${caches_from[@]+"${caches_from[@]}"}
 echo "Dockerfile: ${dockerfile}"
 echo "Build context: ${build_context}"
 echo "Target: ${target}"
-docker build \
+DOCKER_BUILDKIT=${enable_buildkit} \
+  docker build \
   --file "${dockerfile}" \
   --tag "${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME}" \
   ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ADDITIONAL_BUILD_ARGS:-} \

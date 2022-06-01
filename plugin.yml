@@ -39,6 +39,14 @@ configuration:
       type: boolean
     save-digest-as-metadata:
       type: string
+    driver:
+      type: string
+      enum: ["legacy", "buildkit"]
+    disable-cache-metadata:
+      type: boolean
+    progress-output:
+      type: string
+      enum: ["plain", "tty", "auto"]
   required: ['ecr-name']
   not:
     required: ['region', 'regions']

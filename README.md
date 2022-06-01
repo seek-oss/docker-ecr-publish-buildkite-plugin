@@ -255,6 +255,26 @@ steps:
   Specify a Buildkite metadata variable to save the Docker image digest to,
   e.g. `save-digest-as-metadata: runtime-image-digest`.
 
+- `driver` (optional, string, one of `buildkit`, `legacy`)
+  > Default value `legacy`
+
+  Specify a Buildkite driver to use for building the image,
+  e.g. `driver: buildkit`.
+
+- `progress-output` (optional, string, one of `plain`, `tty`, `auto`)
+  > Only takes effect if `driver: buildkit`  
+  > Default value `plain`
+
+  Specify the progress output format,
+  e.g. `progress-output: tty`.
+
+- `disable-cache-metadata` (optional, string)
+  > Only takes effect if `driver: buildkit`  
+  > Default `false`
+
+  Recommendation is to keep it `false`. Docker buildkit uses cached layers from a previously built image and listed in `cache-from` property. This greatly reduces time taken to build an image. Turning cache metadata off might significantly increase build time.
+  e.g. `disable-cache-metadata: true`.
+
 ## License
 
 MIT (see [LICENSE](LICENSE))
