@@ -161,7 +161,8 @@ read_list_property() {
 }
 
 push_tags() {
-  local tags=("${@}")
+  local local_tag="${1}"
+  local tags=("${@:2}")
 
   for region in "${regions[@]}"; do
 
@@ -173,7 +174,7 @@ push_tags() {
 
     for tag in "${tags[@]}"; do
       echo "Tag: '${tag}'"
-      docker tag "${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME}" "${image}:${tag}"
+      docker tag "${local_tag}" "${image}:${tag}"
       docker push "${image}:${tag}" &
       local backgrounded_pid=$!
       push_tasks[${backgrounded_pid}]="${region}-${image}:${tag}"
@@ -219,6 +220,7 @@ enable_buildkit=0
 build_args=()
 caches_from=()
 tags=("${BUILDKITE_BUILD_NUMBER}")
+local_tag="${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME}:${BUILDKITE_BUILD_NUMBER}"
 
 regions=()
 read_build_driver
@@ -266,7 +268,7 @@ echo "Target: ${target}"
 DOCKER_BUILDKIT=${enable_buildkit} \
   docker build \
   --file "${dockerfile}" \
-  --tag "${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ECR_NAME}" \
+  --tag "${local_tag}" \
   ${BUILDKITE_PLUGIN_DOCKER_ECR_PUBLISH_ADDITIONAL_BUILD_ARGS:-} \
   ${build_args[@]+"${build_args[@]}"} \
   ${caches_from[@]+"${caches_from[@]}"} \
@@ -282,4 +284,4 @@ if [[ -n ${save_digest_as_metadata} ]]; then
 fi
 
 echo '--- Pushing Docker image'
-push_tags "${tags[@]}"
+push_tags "${local_tag}" "${tags[@]}"
